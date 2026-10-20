@@ -98,13 +98,29 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Lint
-        run: npm run lint
+        run: |
+          set -o pipefail
+          npm run lint 2>&1 | tee lint.log
       - name: Typecheck
-        run: npm run typecheck
+        run: |
+          set -o pipefail
+          npm run typecheck 2>&1 | tee typecheck.log
       - name: Unit tests
-        run: npm test
+        run: |
+          set -o pipefail
+          npm run test 2>&1 | tee test.log
       - name: Build
-        run: npm run build
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee build.log
+      - name: Report web failures
+        if: failure()
+        run: |
+          for f in lint typecheck test build; do
+            [ -f "$f.log" ] || continue
+            body=$(grep -v '^\s*$' "$f.log" | tail -c 3500 | sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g')
+            echo "::error title=npm run $f::${body}"
+          done
       - name: Dependency audit
         # Shipped (production) dependencies fail on high or critical.
         # Dev-only tooling (lint, test runner) fails on critical: it never
