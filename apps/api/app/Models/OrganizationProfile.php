@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Tenancy\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * The organization's regulatory profile: the facts RuleRadar uses to judge
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property array<int, string> $products
  * @property array<int, string> $obligations
  * @property int $version
- * @property ?\Illuminate\Support\Carbon $completed_at
+ * @property ?Carbon $completed_at
  */
 class OrganizationProfile extends Model
 {

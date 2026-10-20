@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Tenancy\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Append-only (enforced by a database trigger). Written only through
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property ?int $subject_id
  * @property ?array<string, mixed> $before
  * @property ?array<string, mixed> $after
- * @property \Illuminate\Support\Carbon $created_at
+ * @property Carbon $created_at
  * @property ?string $prev_hash
  * @property string $hash
  */

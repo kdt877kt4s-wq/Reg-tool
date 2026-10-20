@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -12,7 +13,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $name
  * @property string $email
  * @property ?string $mfa_secret
- * @property ?\Illuminate\Support\Carbon $mfa_confirmed_at
+ * @property ?Carbon $mfa_confirmed_at
  * @property ?int $mfa_last_used_step
  * @property ?array<int, string> $mfa_recovery_codes
  * @property bool $is_platform_admin

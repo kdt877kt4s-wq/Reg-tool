@@ -6,6 +6,7 @@ use App\Support\Role;
 use App\Tenancy\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -13,9 +14,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $email
  * @property Role $role
  * @property ?int $department_id
- * @property \Illuminate\Support\Carbon $expires_at
- * @property ?\Illuminate\Support\Carbon $accepted_at
- * @property ?\Illuminate\Support\Carbon $revoked_at
+ * @property Carbon $expires_at
+ * @property ?Carbon $accepted_at
+ * @property ?Carbon $revoked_at
  */
 class Invitation extends Model
 {
