@@ -10,7 +10,7 @@ export type NavItem = {
   stage: number;
 };
 
-export const CURRENT_STAGE = 0;
+export const CURRENT_STAGE = 1;
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { label: "Overview", href: "/", stage: 0 },

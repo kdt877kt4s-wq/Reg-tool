@@ -23,7 +23,7 @@ The full architecture and MVP plan lives in the shared planning doc.
 Requirements: PHP 8.3 with `pdo_pgsql` and `redis`, Composer 2, Node 22, Docker.
 
 ```bash
-docker compose up -d
+docker compose up -d        # first run creates the ruleradar_app role and databases
 
 cd apps/api
 cp .env.example .env
@@ -54,11 +54,22 @@ CI runs both suites, a Bicep compile and dependency audits on every push and pul
 | Stage | Scope | Status |
 | --- | --- | --- |
 | 0 | Foundations: monorepo, dev stack, CI, taxonomy, ADRs | Done |
-| 1 | Tenancy, auth, MFA, roles, audit log, profile wizard | Planned |
+| 1 | Tenancy, auth, MFA, roles, audit log, profile wizard | Done |
 | 2 | Federal Register ingestion and Regulatory Intelligence | Planned |
 | 3 | AI analysis with citations, review and approval | Planned |
 | 4 | Tasks, evidence, calendar, notifications, dashboard | Planned |
 | 5 | Reports, hardening, Azure deploy, pilot | Planned |
+
+## Security model in brief
+
+- The web server holds API tokens; the browser only has an HttpOnly cookie (ADR 0005).
+- The API connects to PostgreSQL as `ruleradar_app`, which is not a superuser, so row-level
+  security isolates every organization's rows (ADR 0002). Tests run the same way.
+- Organization administrators and compliance officers must use two-factor login.
+- Organization actions are written to a hash-chained, append-only audit log.
+
+If your local database was created before Stage 1, recreate it so the app role exists:
+`docker compose down -v && docker compose up -d`.
 
 ## Data integrity rules
 

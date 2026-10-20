@@ -15,7 +15,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "RuleRadar",
+  title: { default: "RuleRadar", template: "%s | RuleRadar" },
   description: "Know what changed. Understand what matters. Stay ahead of compliance.",
 };
 
