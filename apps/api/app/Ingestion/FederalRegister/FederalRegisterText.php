@@ -22,7 +22,7 @@ final class FederalRegisterText
         $body = html_entity_decode($body, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
         // GPO uses `` and '' for quotation marks.
-        $body = str_replace(["``", "''"], ['"', '"'], $body);
+        $body = str_replace(['``', "''"], ['"', '"'], $body);
         $body = str_replace(["\r\n", "\r"], "\n", $body);
 
         return trim($body);
