@@ -31,7 +31,7 @@ jobs:
           --health-cmd "pg_isready -U ruleradar"
           --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: shivammathur/setup-php@v2
         with:
           php-version: "8.3"
@@ -39,7 +39,9 @@ jobs:
           coverage: none
           tools: composer:v2
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          echo "::notice title=Resolved versions::$(composer show laravel/framework pestphp/pest --format=text 2>/dev/null | grep -E '^(name|versions)' | tr '\n' ' ')"
       - name: Prepare environment
         run: cp .env.example .env && php artisan key:generate
       - name: Code style (Pint)
@@ -60,8 +62,8 @@ jobs:
       run:
         working-directory: apps/web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: "22"
       - name: Install dependencies
@@ -75,12 +77,20 @@ jobs:
       - name: Build
         run: npm run build
       - name: Dependency audit
-        run: npm audit --audit-level=high
+        run: |
+          # Surface each high/critical finding as an annotation so it is
+          # readable on the run summary, then fail on them.
+          npm audit --json > audit.json || true
+          jq -r '.vulnerabilities // {} | to_entries[]
+                 | select(.value.severity == "high" or .value.severity == "critical")
+                 | "::error title=npm audit::\(.key) \(.value.range) [\(.value.severity)] via \([.value.via[] | if type == "string" then . else .title end] | join("; ")) | fix: \(.value.fixAvailable | tostring)"' audit.json
+          echo "::notice title=Resolved versions::$(npm ls next react eslint-config-next tailwindcss --depth=0 2>/dev/null | tail -n +2 | tr '\n' ' ')"
+          npm audit --audit-level=high
 
   infra:
     name: Infrastructure (Bicep)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Compile Bicep
         run: az bicep install && az bicep build --file infra/main.bicep --stdout > /dev/null
