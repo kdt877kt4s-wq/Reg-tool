@@ -1,0 +1,292 @@
+<html>
+<head>
+<title>Federal Register, Volume 91 Issue 189 (Thursday, October 1, 2026)</title>
+</head>
+<body><pre>
+[Federal Register Volume 91, Number 189 (Thursday, October 1, 2026)]
+[Rules and Regulations]
+[Pages 62323-62327]
+From the Federal Register Online via the Government Publishing Office [<a href="http://www.gpo.gov">www.gpo.gov</a>]
+[FR Doc No: 2026-20134]
+
+
+
+[[Page 62323]]
+
+=======================================================================
+-----------------------------------------------------------------------
+
+DEPARTMENT OF HEALTH AND HUMAN SERVICES
+
+Centers for Medicare & Medicaid Services
+
+42 CFR Part 412
+
+[CMS-1847-CN]
+RIN 0938-AV77
+
+
+Medicare Program; FY 2027 Inpatient Psychiatric Facilities 
+Prospective Payment System--Rate Update; Correction
+
+AGENCY: Centers for Medicare & Medicaid Services (CMS), HHS.
+
+ACTION: Final rule; correction.
+
+-----------------------------------------------------------------------
+
+SUMMARY: This document corrects technical errors in the final action 
+that appeared in the July 31, 2026 Federal Register titled ``Medicare 
+Program; FY 2027 Inpatient Psychiatric Facilities Prospective Payment 
+System--Rate Update''.
+
+DATES: This correction is effective October 1, 2026.
+
+FOR FURTHER INFORMATION CONTACT: 
+    The IPF Payment Policy mailbox at <a href="/cdn-cgi/l/email-protection#612831273100180c040f15310e0d08021821020c124f0909124f060e17"><span class="__cf_email__" data-cfemail="6821382e380911050d061c380704010b11280b051b4600001b460f071e">[email&#160;protected]</span></a> for 
+information regarding the IPF wage index.
+    Nick Brock (410) 786-5148, for general information regarding the 
+inpatient psychiatric facilities prospective payment system (IPF PPS).
+    Kaleigh Emerson, <a href="/cdn-cgi/l/email-protection#056e6469606c626d2b60686077766a6b34456668762b6d6d762b626a73"><span class="__cf_email__" data-cfemail="d6bdb7bab3bfb1bef8b3bbb3a4a5b9b8e796b5bba5f8bebea5f8b1b9a0">[email&#160;protected]</span></a>, for information 
+regarding the IPF Quality Reporting Program.
+
+SUPPLEMENTARY INFORMATION:
+
+I. Background
+
+    In FR Doc. 2026-15588 of July 31, 2026, the fiscal year (FY) 2027 
+Inpatient Psychiatric Facilities Prospective Payment System--Rate 
+Update final rule (FY 2027 IPF PPS final rule) (91 FR 48514), there 
+were a number of technical errors that are identified and corrected in 
+this correcting document.
+
+II. Summary of Errors
+
+A. Summary of Errors in the Preamble
+
+    There was a technical error in the calculation of the final FY 2027 
+IPF PPS wage indexes, which impacted several calculations. There is an 
+impact to the wage index for one provider in Core-Based Statistical 
+Area (CBSA) 25620 for Hattiesburg, Mississippi due to the recalculated 
+wage indexes, and thus we recalculated the impact analysis provided in 
+Table 16 of the FY 2027 IPF PPS final rule (91 FR 48579 through 48580). 
+Therefore, changes are needed to the published values in Table 16. We 
+also recalculated the wage index budget neutrality factor; it changed 
+from 0.9989 to 0.9986. This recalculated wage index budget neutrality 
+factor affected the FY 2027 IPF PPS rates.
+    On pages 48514 and 48521, The IPF PPS Federal per diem base rate 
+changed from $912.40 to $912.13. The IPF PPS Federal per diem base rate 
+for providers who failed to report quality data changed from $894.56 to 
+$894.29. The electroconvulsive therapy (ECT) payment per treatment 
+changed from $688.59 to $688.38. The ECT payment per treatment for 
+providers who failed to report quality data changed from $675.13 to 
+$674.93.
+    On pages 48514, 48521, and 48527, the wage index budget neutrality 
+factor changed from 0.9989 to 0.9986.
+    On page 48523, we inadvertently made a typographical error 
+regarding the number of ICD-10-CM diagnosis codes added to the 
+Poisoning comorbidity code list.
+    On page 48529, we inadvertently made a typographical error 
+regarding the adjustment factor for IPFs that do not have a qualifying 
+emergency department (ED).
+    On page 48570, we inadvertently omitted a footnote.
+    On pages 48579 and 48580, Table 16 reflects the impact to providers 
+based on the inaccurate calculation of the FY 2027 IPF PPS wage index; 
+therefore, Table 16 is updated to reflect the correct calculations.
+    On page 48580, the largest payment percent decrease for IPF 
+hospitals reflects the impact to providers based on the inaccurate 
+calculation of the FY 2027 IPF PPS wage index; therefore, an update is 
+needed to reflect the correct impact.
+
+B. Summary of Errors and Corrections in the Tables Posted on the CMS 
+Website for the IPF PPS Wage Index
+
+    As discussed in the FY 2027 IPF PPS final rule (91 FR 48525), we 
+used the concurrent pre-floor, pre-reclassified Inpatient Prospective 
+Payment System (IPPS) hospital wage index as the basis for the IPF wage 
+index. For FY 2027, the concurrent pre-floor, pre-reclassified IPPS 
+hospital wage data are from cost reporting periods beginning on or 
+after October 1, 2022 and before October 1, 2023 (FY 2023 cost report 
+data), as discussed in the final rule titled, ``Medicare Program; 
+Hospital Inpatient Prospective Payment Systems for Acute Care Hospitals 
+(IPPS) and the Long-Term Care Hospital Prospective Payment System and 
+Policy Changes and Fiscal Year (FY) 2027 Rates; Requirements for 
+Quality Programs; Other Policy Changes; and Adoption of Updated 
+Versions of Certain Health Information Technology Standards'' 
+(hereinafter referred to as the FY 2027 IPPS/LTCH PPS final rule) (91 
+FR 49790).
+    In calculating the wage index under the FY 2027 IPPS/LTCH PPS final 
+rule, we made an inadvertent error related to the calculation of the 
+wage index. This error is identified, discussed, and corrected in the 
+correction notice titled, ``Medicare Program; Hospital Inpatient 
+Prospective Payment Systems for Acute Care Hospitals (IPPS) and the 
+Long-Term Care Hospital Prospective Payment System and Policy Changes 
+and Fiscal Year (FY) 2027 Rates; Requirements for Quality Programs; 
+Other Policy Changes; and Adoption of Updated Versions of Certain 
+Health Information Technology Standards; Correction'', published 
+elsewhere in this issue of the Federal Register.
+    Under our methodologies as finalized in the FY 2027 IPPS/LTCH PPS 
+final rule, we exclude hospitals that have subsequently converted to 
+rural emergency hospitals (REHs) from certain data and calculations 
+used in the IPPS ratesetting. Specifically, we stated that we exclude 
+REHs, including hospitals that subsequently became REHs after the 
+period from which the data were taken for purposes of developing the 
+Medicare Severity Diagnosis-Related Group (MS-DRG) relative weights for 
+FY 2027 (91 FR 49672) and from the calculation of the average 
+standardized amount (91 FR 50370). In addition, we stated that any 
+hospital that is designated as a REH by 7 days prior to the publication 
+of the preliminary wage index public use file (PUF) is excluded from 
+the calculation of the wage index (91 FR 49791). We inadvertently 
+treated a current IPPS hospital (CMS Certification Number (CCN) 250078) 
+as a hospital that had converted to REH status, thereby erroneously 
+excluding its data from the MS-DRG relative weight calculation and the 
+wage index. This error affects the unadjusted, pre-reclassified, pre-
+rural floor IPPS wage data and thereby affects the IPF PPS wage data 
+for CBSA 25620 for Hattiesburg, Mississippi.
+    We are correcting the wage index for CBSA 25620 for Hattiesburg, 
+Mississippi in Table B setting forth the wage indexes for rural areas 
+based on CBSA labor market areas and Table C setting forth the wage 
+indexes for urban and rural areas without counties, which are available 
+exclusively on the CMS website at <a href="https://www.cms.gov/medicare/medicare-fee-for-servicepayment/inpatientpsychfacilpps/wageindex">https://www.cms.gov/medicare/medicare-fee-for-servicepayment/inpatientpsychfacilpps/wageindex</a>.
+
+[[Page 62324]]
+
+    The omitted wage data for the one hospital in CBSA 25620 required 
+the recalculation of the final FY 2027 IPF PPS wage indexes. 
+Additionally, as discussed in the FY 2027 IPF PPS final rule (91 FR 
+48526 and 48527), changes to the wage index are made in a budget 
+neutral manner so that updates do not increase expenditures. As 
+discussed above, it was necessary to recalculate the FY 2027 IPF PPS 
+wage index budget neutrality factor. The recalculated wage index budget 
+neutrality factor changed from 0.9989 to 0.9986. This means that the 
+IPF federal per diem base rate changed from $912.40 to $912.13 and the 
+ECT payment per treatment changed from $688.59 to $688.38.
+
+III. Waiver of Proposed Rulemaking and Delay in Effective Date
+
+    Section 1871(b)(1) of the Social Security Act (the Act) requires 
+the Secretary to provide for notice of a proposed rule in the Federal 
+Register and provide a period of not less than 60 days for public 
+comment. In addition, section 1871(e)(1)(B)(i) of the Act mandates a 
+30-day delay in effective date after issuance or publication of a rule. 
+Section 1871(b)(2)(C) of the Act provides an exception from the notice 
+and 60-day comment period and delay in effective date requirements of 
+the Act, under the good cause standard set forth in 5 U.S.C. 553(b)(B). 
+Section 1871(e)(1)(B)(ii) of the Act provides an exception from the 
+delay in effective date requirements of the Act as well. Section 
+553(b)(B) authorizes an agency to dispense with normal notice and 
+comment rulemaking procedures for good cause if the agency makes a 
+finding that the notice and comment process is impracticable, 
+unnecessary, or contrary to the public interest, and includes a 
+statement of the finding and the reasons for it in the rule. In 
+addition, section 1871(e)(1)(B)(ii) of the Act allows the agency to 
+avoid the 30-day delay in effective date where the waiver is necessary 
+to comply with statutory requirements or such delay is contrary to the 
+public interest and the agency includes in the rule a statement of the 
+finding and the reasons for it.
+    In our view, this correcting document does not constitute a 
+rulemaking that would be subject to these requirements. This document 
+merely corrects technical errors in the FY 2027 IPF PPS final rule and 
+provides an updated IPF wage index resulting in revisions to the 
+payment updates, payment impact, and related tables in the FY 2027 IPF 
+PPS final rule. The corrections contained in this document are 
+consistent with, and do not make substantive changes to, the policies 
+and payment methodologies that were proposed, subject to notice and 
+comment procedures, and adopted in the FY 2027 IPF PPS final rule. As a 
+result, the corrections made through this document are intended to 
+resolve inadvertent errors so that the FY 2027 IPF PPS final rule 
+accurately reflects the policies adopted therein.
+    In addition, even if this were a rulemaking to which the notice and 
+comment and delayed effective date requirements applied, we find that 
+there is good cause to waive such requirements. Undertaking further 
+notice and comment procedures to incorporate the corrections in this 
+document into the final rule or delaying the effective date would be 
+contrary to the public interest because it is in the public's interest 
+for providers to receive appropriate payments in as timely a manner as 
+possible, and to ensure that the FY 2027 IPF PPS final rule accurately 
+reflects our policies. Furthermore, such procedures would be 
+unnecessary, as we are not altering our payment methodologies or 
+policies, but rather, we are simply implementing correctly the 
+methodologies and policies that we previously proposed, requested 
+comments on, and subsequently finalized. This final rule correction is 
+intended solely to ensure that the FY 2027 IPF PPS final rule 
+accurately reflects these payment methodologies and policies. 
+Therefore, we believe we have good cause to waive the notice and 
+comment and effective date requirements.
+
+IV. Correction of Errors
+
+    In FR Doc. 2026-15588 of July 31, 2026, (91 FR 48514), make the 
+following corrections:
+    1. On page 48514, third column,
+    a. First second-level (++) bulleted paragraph, line 2, the figure 
+``$912.40'' is corrected to read ``$912.13''.
+    b. Second second-level (++) bulleted paragraph, line 3, the figure 
+``$894.56'' is corrected to read ``$894.29''.
+    c. Third second-level (++) bulleted paragraph, line 3, the figure 
+``$688.59'' is corrected to read ``$688.38''.
+    d. Fourth second-level (++) bulleted paragraph, line 3, the figure 
+``$675.13'' is corrected to read ``$674.93''.
+    e. Sixth second-level (++) bulleted paragraph, line 2, the figure 
+``0.9989'' is corrected to read ``0.9986''.
+    2. On page 48521,
+    a. Second column, third full paragraph,
+    (1) Line 12, the figure ``0.9989'' is corrected to read ``0.9986''.
+    (2) Line 16, the figure ``$912.40'' is corrected to read 
+``$912.13''.
+    b. Third column,
+    (1) First partial paragraph,
+    (a) Line 1, the figure ``0.9989'' is corrected to read ``0.9986''.
+    (b) Line 4, the figure ``$688.59'' is corrected to read 
+``$688.38''.
+    (2) First bulleted paragraph,
+    (a) Line 13, the figure ``0.9989'' is corrected to read ``0.9986''.
+    (b) Line 16, the figure ``$894.56'' is corrected to read 
+``$894.29''.
+    (3) Second bulleted paragraph,
+    (a) Line 4, the figure ``0.9989'' is corrected to read ``0.9986''.
+    (b) Line 8, the figure ``675.13'' is corrected to read ``674.93''.
+    3. On page 48523, second column, third full paragraph, line 2, the 
+figure ``10'' is corrected to read ``20''.
+    4. On page 48527, first column, third full paragraph (``Step 3''), 
+line 5, the figure ``0.9989'' is corrected to read ``0.9986''.
+    5. On page 48529, middle of the page, second column, first full 
+paragraph, line 12, the figure ``1.27'' is corrected to read ``1.28''.
+    6. On page 48570, second column, first partial paragraph, lines 17 
+and 18, the phrase ``to calculate an hourly pre-tax wage rate of 
+$30.10/hr.'' is corrected to include footnote 41a to read as follows: 
+``\41a\ <a href="https://www.bls.gov/news.release/pdf/wkyeng.pdf">https://www.bls.gov/news.release/pdf/wkyeng.pdf</a>. Accessed 
+February 18, 2026.''
+    7. On pages 48579 and 48580, TABLE 16: FY 2027 IPF PPS PAYMENT 
+IMPACTS is corrected to read as follows:
+BILLING CODE 4169-69-P
+
+[[Page 62325]]
+
+[GRAPHIC] [TIFF OMITTED] TR01OC26.007
+
+
+[[Page 62326]]
+
+
+[GRAPHIC] [TIFF OMITTED] TR01OC26.008
+
+
+[[Page 62327]]
+
+
+    8. On page 48580, bottom half of the page, third column, first 
+partial paragraph,
+    (1) Line 22, the figure ``1.1'' is corrected to read ``1.3''.
+    (2) Line 23, the phrase ``with 25-49 beds'' is corrected to read 
+``located in the East South Central region''.
+
+Liesl I. Fowler,
+Executive Secretary to the Department, Department of Health and Human 
+Services.
+[FR Doc. 2026-20134 Filed 9-30-26; 8:45 am]
+BILLING CODE 4169-69-C
+
+
+</pre><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body>
+</html>

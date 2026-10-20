@@ -30,10 +30,20 @@ jobs:
           get "$api/documents/2026-20281.json" "$out/document-2026-20281.json"
           get "$api/documents/2026-20134.json" "$out/document-2026-20134.json"
 
+          # The exact search RuleRadar sends (explicit fields), HHS family rules.
+          fields=$(printf 'fields%%5B%%5D=%s&' abstract action agencies body_html_url cfr_references citation comments_close_on correction_of corrections dates docket_ids document_number effective_on end_page html_url page_length pdf_url publication_date raw_text_url regulation_id_numbers significant start_page title type)
+          get "$api/documents.json?${fields}per_page=5&order=newest&conditions%5Bagencies%5D%5B%5D=health-and-human-services-department&conditions%5Btype%5D%5B%5D=RULE&conditions%5Btype%5D%5B%5D=PRORULE" "$out/search-hhs-rules-fields.json"
+          # Medicare Advantage (42 CFR 422) documents, for profile matching.
+          get "$api/documents.json?${fields}per_page=3&order=newest&conditions%5Bcfr%5D%5Btitle%5D=42&conditions%5Bcfr%5D%5Bpart%5D=422" "$out/search-cfr-42-422.json"
+          # The rule that 2026-20134 corrects (named in its text).
+          get "$api/documents/2026-15588.json" "$out/document-2026-15588.json"
+
           # Plain text of the correction (short) for chunking tests.
           raw=$(jq -r '.raw_text_url // empty' "$out/document-2026-20134.json")
           [ -n "$raw" ] && get "$raw" "$out/document-2026-20134.raw.txt" || echo "no raw_text_url"
 
+          echo "::notice title=Search with fields::$(jq -c '{count, next: (.next_page_url != null), first: (.results[0] | {document_number, type, action, publication_date, effective_on, cfr_references})}' "$out/search-hhs-rules-fields.json")"
+          echo "::notice title=42 CFR 422::$(jq -c '[.results[] | {document_number, type, action, cfr: [.cfr_references[] | "\(.title) CFR \(.part)"]}]' "$out/search-cfr-42-422.json")"
           echo "::notice title=Agencies of interest::$(jq -c '[.[] | select(.name | test("Medicare|Health and Human Services|Civil Rights Office|Inspector General Office, Health|National Coordinator|Technology Policy|Food and Drug")) | {id, slug, name, parent_id}]' "$out/agencies.json")"
           echo "::notice title=Document keys::$(jq -c 'keys' "$out/document-2026-20281.json")"
           echo "::notice title=Correction fields::$(jq -c '{type, document_number, correction_of, corrections, effective_on, comments_close_on, citation, cfr_references, pdf_url, raw_text_url, html_url}' "$out/document-2026-20134.json")"
