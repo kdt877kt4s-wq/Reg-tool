@@ -39,7 +39,8 @@ function createUser(?string $email = null, bool $mfa = false): User
         enableMfa($user);
     }
 
-    return $user;
+    // Reload so every column is present, as it is for a signed-in user.
+    return $user->fresh();
 }
 
 /** Turns on two-factor for a user and returns the TOTP secret. */

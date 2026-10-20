@@ -25,6 +25,9 @@ class AuthController extends Controller
 
     public function register(Request $request, ProvisionOrganization $provision): JsonResponse
     {
+        // Emails are unique regardless of capitalization.
+        $request->merge(['email' => Str::lower(trim((string) $request->input('email')))]);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'string', 'email:rfc', 'max:254', 'unique:users,email'],
@@ -35,7 +38,7 @@ class AuthController extends Controller
         $user = DB::transaction(function () use ($data, $provision) {
             $user = User::create([
                 'name' => $data['name'],
-                'email' => Str::lower($data['email']),
+                'email' => $data['email'],
                 'password' => $data['password'],
             ]);
             $provision->handle($user, $data['organization_name']);

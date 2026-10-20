@@ -24,7 +24,7 @@ class Invitation extends Model
 
     public const TTL_DAYS = 7;
 
-    protected $fillable = ['organization_id', 'email', 'role', 'department_id', 'token_hash', 'invited_by', 'expires_at'];
+    protected $fillable = ['organization_id', 'email', 'role', 'department_id', 'token_hash', 'invited_by', 'expires_at', 'accepted_at', 'revoked_at'];
 
     protected $hidden = ['token_hash'];
 

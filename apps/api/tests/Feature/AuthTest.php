@@ -36,7 +36,8 @@ it('registers a user with a new organization as its administrator', function () 
             ->and(AuditEvent::withoutGlobalScopes()->where('action', 'organization.created')->count())->toBe(1);
     });
 
-    expect($response->json('token'))->toStartWith('rr_');
+    // Sanctum tokens look like "<id>|rr_<random>".
+    expect($response->json('token'))->toMatch('/^\d+\|rr_[A-Za-z0-9]{40,}/');
 });
 
 it('rejects a duplicate email and a short password', function () {
