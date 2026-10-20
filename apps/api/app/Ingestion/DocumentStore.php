@@ -177,12 +177,26 @@ final class DocumentStore
     {
         $changes = [];
         foreach ($after as $key => $value) {
-            if (($before[$key] ?? null) !== $value) {
+            // Stored metadata comes back from jsonb with object keys reordered;
+            // compare canonical forms so only real changes count.
+            if (self::canonical($before[$key] ?? null) !== self::canonical($value)) {
                 $changes[$key] = ['from' => $before[$key] ?? null, 'to' => $value];
             }
         }
 
         return $changes;
+    }
+
+    private static function canonical(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+        if (! array_is_list($value)) {
+            ksort($value);
+        }
+
+        return array_map(self::canonical(...), $value);
     }
 
     /** @return array<string, mixed> */

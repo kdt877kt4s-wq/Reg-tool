@@ -46,3 +46,8 @@ export function commentDeadlineNote(date: string | null, today: Date = new Date(
   if (days === 0) return "Comments close today";
   return `Comments close ${formatDate(date)} (${days} ${days === 1 ? "day" : "days"})`;
 }
+
+/** The calendar date `days` before `now`, as YYYY-MM-DD (UTC). */
+export function isoDateDaysAgo(days: number, now: Date = new Date()): string {
+  return new Date(now.getTime() - days * 86_400_000).toISOString().slice(0, 10);
+}

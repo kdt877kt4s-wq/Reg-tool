@@ -2,13 +2,14 @@ import Link from "next/link";
 import { buttonClass } from "@/components/ui/button";
 import { SourceStatusLine } from "@/components/source-status";
 import { api, apiRequest, type DocumentList, type Health, type Profile, type SourceStatus } from "@/lib/api";
+import { isoDateDaysAgo } from "@/lib/format";
 import { DocumentRow } from "./regulations/document-row";
 import { can, requireOrganization } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ profile?: string }> }) {
-  const since = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+  const since = isoDateDaysAgo(30);
   const [{ me, org }, health, profile, params, sources, recent] = await Promise.all([
     requireOrganization(),
     api.health(),
