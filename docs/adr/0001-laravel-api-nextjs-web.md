@@ -3,7 +3,7 @@
 Status: Accepted (2026-10-20)
 
 ## Decision
-The backend is a Laravel 11 API (`apps/api`) with queue workers and the scheduler.
+The backend is a Laravel 13 API (`apps/api`) with queue workers and the scheduler.
 The frontend is a Next.js App Router app (`apps/web`) in TypeScript with Tailwind CSS and shadcn/ui.
 They live in one monorepo and deploy as separate containers.
 

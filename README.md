@@ -10,7 +10,7 @@ The MVP does not process protected health information.
 
 | Path | What it is |
 | --- | --- |
-| `apps/api` | Laravel 11 API, queue workers and scheduler |
+| `apps/api` | Laravel 13 API, queue workers and scheduler |
 | `apps/web` | Next.js web app (TypeScript, Tailwind CSS, shadcn/ui) |
 | `infra/main.bicep` | Azure resources per environment |
 | `docs/adr` | Architecture decision records |
@@ -53,7 +53,7 @@ CI runs both suites, a Bicep compile and dependency audits on every push and pul
 
 | Stage | Scope | Status |
 | --- | --- | --- |
-| 0 | Foundations: monorepo, dev stack, CI, taxonomy, ADRs | In progress |
+| 0 | Foundations: monorepo, dev stack, CI, taxonomy, ADRs | Done |
 | 1 | Tenancy, auth, MFA, roles, audit log, profile wizard | Planned |
 | 2 | Federal Register ingestion and Regulatory Intelligence | Planned |
 | 3 | AI analysis with citations, review and approval | Planned |
