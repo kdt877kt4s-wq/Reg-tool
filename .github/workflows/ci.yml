@@ -45,7 +45,11 @@ jobs:
       - name: Prepare environment
         run: cp .env.example .env && php artisan key:generate
       - name: Code style (Pint)
-        run: vendor/bin/pint --test
+        run: |
+          vendor/bin/pint --test --format=json > pint.json || {
+            jq -r '.files[]? | "::error file=apps/api/\(.name),title=Pint::fixers: \(.appliedFixers | join(", "))"' pint.json
+            exit 1
+          }
       - name: Migrate and seed (runs the real migrations against Postgres + pgvector)
         env:
           DB_DATABASE: ruleradar_test
@@ -77,15 +81,23 @@ jobs:
       - name: Build
         run: npm run build
       - name: Dependency audit
+        # Shipped (production) dependencies fail on high or critical.
+        # Dev-only tooling (lint, test runner) fails on critical: it never
+        # reaches users, and some lint-tooling advisories have no fix yet.
         run: |
-          # Surface each high/critical finding as an annotation so it is
-          # readable on the run summary, then fail on them.
-          npm audit --json > audit.json || true
-          jq -r '.vulnerabilities // {} | to_entries[]
-                 | select(.value.severity == "high" or .value.severity == "critical")
-                 | "::error title=npm audit::\(.key) \(.value.range) [\(.value.severity)] via \([.value.via[] | if type == "string" then . else .title end] | join("; ")) | fix: \(.value.fixAvailable | tostring)"' audit.json
-          echo "::notice title=Resolved versions::$(npm ls next react eslint-config-next tailwindcss --depth=0 2>/dev/null | tail -n +2 | tr '\n' ' ')"
-          npm audit --audit-level=high
+          annotate() {
+            jq -r --arg lvl "$2" '.vulnerabilities // {} | to_entries[]
+              | select(.value.severity as $s | ($lvl == "high" and ($s == "high" or $s == "critical")) or ($lvl == "critical" and $s == "critical") or ($lvl == "warn" and ($s == "high")))
+              | "::\(if $lvl == "warn" then "warning" else "error" end) title=npm audit (\($ARGS.named.scope))::\(.key) \(.value.range) [\(.value.severity)] via \([.value.via[] | if type == "string" then . else .title end] | join("; "))"' --arg scope "$3" "$1"
+          }
+          npm audit --omit=dev --json > audit-prod.json || true
+          npm audit --json > audit-all.json || true
+          annotate audit-prod.json high production
+          annotate audit-all.json critical dev
+          annotate audit-all.json warn dev
+          echo "::notice title=Resolved versions::$(npm ls next react eslint-config-next vitest tailwindcss --depth=0 2>/dev/null | tail -n +2 | tr '\n' ' ')"
+          npm run audit:prod
+          npm run audit:dev
 
   infra:
     name: Infrastructure (Bicep)
