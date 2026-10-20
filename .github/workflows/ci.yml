@@ -23,12 +23,11 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg16
         env:
-          POSTGRES_USER: ruleradar
-          POSTGRES_PASSWORD: ruleradar
-          POSTGRES_DB: ruleradar_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U ruleradar"
+          --health-cmd "pg_isready -U postgres"
           --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v5
@@ -42,6 +41,17 @@ jobs:
         run: |
           composer install --no-interaction --prefer-dist --no-progress
           echo "::notice title=Resolved versions::$(composer show laravel/framework pestphp/pest --format=text 2>/dev/null | grep -E '^(name|versions)' | tr '\n' ' ')"
+      - name: Create restricted app role and test database
+        # Same setup as local docker: the app is not a superuser, so
+        # row-level security applies to every query the tests make.
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 \
+            -c "CREATE ROLE ruleradar_app LOGIN PASSWORD 'ruleradar_app' NOSUPERUSER NOBYPASSRLS NOCREATEROLE" \
+            -c "CREATE DATABASE ruleradar_test OWNER ruleradar_app"
+          psql -h localhost -U postgres -d ruleradar_test -v ON_ERROR_STOP=1 \
+            -c "CREATE EXTENSION IF NOT EXISTS vector" -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
       - name: Prepare environment
         run: cp .env.example .env && php artisan key:generate
       - name: Code style (Pint)
