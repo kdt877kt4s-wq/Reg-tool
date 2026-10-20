@@ -80,7 +80,7 @@ it('records a new version with the changed fields when the source changes', func
     expect($run->updated)->toBe(1)
         ->and($doc->current_version)->toBe(2)
         ->and($doc->effective_date->toDateString())->toBe('2027-01-04')
-        ->and($v2->changes)->toBe(['effective_date' => ['from' => '2026-11-30', 'to' => '2027-01-04']]);
+        ->and($v2->changes)->toEqual(['effective_date' => ['from' => '2026-11-30', 'to' => '2027-01-04']]); // jsonb reorders keys
 });
 
 it('links a correction to the rule it corrects, parsed from the text', function () {
