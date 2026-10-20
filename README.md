@@ -40,6 +40,23 @@ npm run dev                  # http://localhost:3000
 
 Mail sent locally appears at http://localhost:8025.
 
+## Regulatory monitoring
+
+```bash
+cd apps/api
+php artisan ruleradar:poll federal_register            # from the last check (first run: 60 days)
+php artisan ruleradar:poll federal_register --days=30  # look back a fixed window
+php artisan queue:work                                 # fetches full text into passages
+php artisan schedule:work                              # weekday 6:30 and 12:30 CT, nightly 30-day look back
+php artisan ruleradar:source-report                    # what has been ingested
+```
+
+RuleRadar monitors rules and proposed rules from the whole HHS family (the HHS Office for Civil
+Rights and ONC/ASTP publish under the department) plus CMS and OIG notices. Agency identifiers and
+response fields are verified against recorded real responses (`apps/api/tests/Fixtures/federal_register`,
+refreshed by the "Record Federal Register fixtures" workflow), and every CI run also polls the
+live Federal Register and reports the result.
+
 ## Tests
 
 ```bash
@@ -55,7 +72,7 @@ CI runs both suites, a Bicep compile and dependency audits on every push and pul
 | --- | --- | --- |
 | 0 | Foundations: monorepo, dev stack, CI, taxonomy, ADRs | Done |
 | 1 | Tenancy, auth, MFA, roles, audit log, profile wizard | Done |
-| 2 | Federal Register ingestion and Regulatory Intelligence | Planned |
+| 2 | Federal Register ingestion and Regulatory Intelligence | Done |
 | 3 | AI analysis with citations, review and approval | Planned |
 | 4 | Tasks, evidence, calendar, notifications, dashboard | Planned |
 | 5 | Reports, hardening, Azure deploy, pilot | Planned |
