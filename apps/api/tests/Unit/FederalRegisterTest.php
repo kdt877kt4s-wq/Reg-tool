@@ -4,6 +4,7 @@ use App\Ingestion\FederalRegister\FederalRegisterAdapter;
 use App\Ingestion\FederalRegister\FederalRegisterText;
 use App\Ingestion\FederalRegisterReferences;
 use App\Ingestion\PassageChunker;
+use Carbon\CarbonImmutable;
 use Tests\TestCase;
 
 uses(TestCase::class);
@@ -12,6 +13,22 @@ function fixtureJson(string $name): array
 {
     return json_decode(file_get_contents(__DIR__."/../Fixtures/federal_register/{$name}.json"), true);
 }
+
+it('builds search URLs in the list format the API accepts', function () {
+    $adapter = new FederalRegisterAdapter(config('sources.federal_register'));
+    $url = $adapter->searchUrl(
+        ['agencies' => ['health-and-human-services-department'], 'types' => ['RULE', 'PRORULE']],
+        CarbonImmutable::parse('2026-10-13'),
+        CarbonImmutable::parse('2026-10-20'),
+    );
+
+    expect($url)->toStartWith('https://www.federalregister.gov/api/v1/documents.json?')
+        ->toContain('fields%5B%5D=document_number')
+        ->toContain('conditions%5Bagencies%5D%5B%5D=health-and-human-services-department')
+        ->toContain('conditions%5Btype%5D%5B%5D=RULE&conditions%5Btype%5D%5B%5D=PRORULE')
+        ->toContain('conditions%5Bpublication_date%5D%5Bgte%5D=2026-10-13')
+        ->not->toMatch('/%5B\\d+%5D/');
+});
 
 it('normalizes a real final rule without inferring missing values', function () {
     $doc = FederalRegisterAdapter::normalize(fixtureJson('document-2026-20281'));

@@ -164,8 +164,14 @@ final class FederalRegisterAdapter implements SourceAdapter
         return array_values(array_unique($parts));
     }
 
-    /** @param array{agencies: list<string>, types: list<string>} $query */
-    private function searchUrl(array $query, CarbonImmutable $from, CarbonImmutable $to): string
+    /**
+     * The API expects list parameters as "fields[]=a&fields[]=b". PHP's
+     * http_build_query writes "fields[0]=a", which the API rejects with
+     * HTTP 400, so indexes are removed.
+     *
+     * @param  array{agencies: list<string>, types: list<string>}  $query
+     */
+    public function searchUrl(array $query, CarbonImmutable $from, CarbonImmutable $to): string
     {
         $params = [
             'per_page' => $this->config['per_page'],
@@ -178,7 +184,9 @@ final class FederalRegisterAdapter implements SourceAdapter
             ],
         ];
 
-        return rtrim($this->config['base_url'], '/').'/documents.json?'.http_build_query($params);
+        $queryString = preg_replace('/%5B\d+%5D/', '%5B%5D', http_build_query($params, '', '&', PHP_QUERY_RFC3986));
+
+        return rtrim($this->config['base_url'], '/').'/documents.json?'.$queryString;
     }
 
     /** @return array<string, mixed> */
