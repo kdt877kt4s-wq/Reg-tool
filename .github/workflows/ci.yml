@@ -46,10 +46,16 @@ jobs:
         run: cp .env.example .env && php artisan key:generate
       - name: Code style (Pint)
         run: |
-          vendor/bin/pint --test --format=json > pint.json || {
-            jq -r '.files[]? | "::error file=apps/api/\(.name),title=Pint::fixers: \(.appliedFixers | join(", "))"' pint.json
+          if ! vendor/bin/pint --test; then
+            # Apply the fixes in the runner and report each file's diff as
+            # an annotation, so the needed change is readable on the run.
+            vendor/bin/pint > /dev/null || true
+            for f in $(git diff --name-only -- .); do
+              body=$(git diff -U0 -- "../../$f" | grep -E '^[+-][^+-]' | head -20 | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+              echo "::error file=$f,title=Pint::${body}"
+            done
             exit 1
-          }
+          fi
       - name: Migrate and seed (runs the real migrations against Postgres + pgvector)
         env:
           DB_DATABASE: ruleradar_test
