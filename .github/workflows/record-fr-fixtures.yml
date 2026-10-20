@@ -1,0 +1,47 @@
+name: Record Federal Register fixtures
+
+# Records real Federal Register API responses so tests run against the
+# service's actual shapes. Run manually; commits to the fixtures branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/record-fr-fixtures.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Fetch responses
+        run: |
+          set -euo pipefail
+          out=apps/api/tests/Fixtures/federal_register
+          mkdir -p "$out"
+          api=https://www.federalregister.gov/api/v1
+          get() { curl -sS --fail --retry 3 -H 'Accept: application/json' "$1" -o "$2"; echo "saved $2 ($(wc -c < "$2") bytes)"; }
+
+          get "$api/agencies.json" "$out/agencies.json"
+          get "$api/documents.json?per_page=5&order=newest&conditions%5Bagencies%5D%5B%5D=centers-for-medicare-medicaid-services&conditions%5Btype%5D%5B%5D=RULE" "$out/search-cms-rules.json"
+          get "$api/documents.json?per_page=5&order=newest&conditions%5Bagencies%5D%5B%5D=centers-for-medicare-medicaid-services&conditions%5Btype%5D%5B%5D=PRORULE" "$out/search-cms-proposed.json"
+          get "$api/documents/2026-20281.json" "$out/document-2026-20281.json"
+          get "$api/documents/2026-20134.json" "$out/document-2026-20134.json"
+
+          # Plain text of the correction (short) for chunking tests.
+          raw=$(jq -r '.raw_text_url // empty' "$out/document-2026-20134.json")
+          [ -n "$raw" ] && get "$raw" "$out/document-2026-20134.raw.txt" || echo "no raw_text_url"
+
+          echo "::notice title=Agencies of interest::$(jq -c '[.[] | select(.name | test("Medicare|Health and Human Services|Civil Rights Office|Inspector General Office, Health|National Coordinator|Technology Policy|Food and Drug")) | {id, slug, name, parent_id}]' "$out/agencies.json")"
+          echo "::notice title=Document keys::$(jq -c 'keys' "$out/document-2026-20281.json")"
+          echo "::notice title=Correction fields::$(jq -c '{type, document_number, correction_of, corrections, effective_on, comments_close_on, citation, cfr_references, pdf_url, raw_text_url, html_url}' "$out/document-2026-20134.json")"
+      - name: Commit to fixtures branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b fixtures/federal-register
+          git add apps/api/tests/Fixtures/federal_register
+          git commit -m "Record Federal Register API fixtures ($(date -u +%Y-%m-%d))"
+          git push -f origin fixtures/federal-register
