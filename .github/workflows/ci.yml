@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API (Laravel)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: ruleradar
+          POSTGRES_PASSWORD: ruleradar
+          POSTGRES_DB: ruleradar_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ruleradar"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_pgsql, pgsql, redis
+          coverage: none
+          tools: composer:v2
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare environment
+        run: cp .env.example .env && php artisan key:generate
+      - name: Code style (Pint)
+        run: vendor/bin/pint --test
+      - name: Migrate and seed (runs the real migrations against Postgres + pgvector)
+        env:
+          DB_DATABASE: ruleradar_test
+        run: php artisan migrate --force --seed
+      - name: Tests (Pest)
+        run: vendor/bin/pest
+      - name: Dependency audit
+        run: composer audit
+
+  web:
+    name: Web (Next.js)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Dependency audit
+        run: npm audit --audit-level=high
+
+  infra:
+    name: Infrastructure (Bicep)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Bicep
+        run: az bicep install && az bicep build --file infra/main.bicep --stdout > /dev/null

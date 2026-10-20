@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/*
+  RuleRadar tokens. Public Sans for the interface, Source Serif 4 for
+  regulatory titles and quoted rule text. One bold element: the navy rail.
+*/
+@theme {
+  --color-paper: #ffffff;
+  --color-ink: #0e2340;
+  --color-signal: #2f5fd0;
+  --color-rule: #d9dee7;
+  --color-muted: #5a6475;
+  --color-caution: #b26a00;
+  --color-rail-text: #c9d3e3;
+
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+
+  /* Type scale (1.2 minor third from a 16px base). */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.2rem;
+  --text-xl: 1.44rem;
+  --text-2xl: 1.728rem;
+}
+
+html {
+  color: var(--color-ink);
+  background: var(--color-paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
