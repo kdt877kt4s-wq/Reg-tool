@@ -1,16 +1,21 @@
 import Link from "next/link";
 import { buttonClass } from "@/components/ui/button";
-import { api, apiRequest, type Health, type Profile } from "@/lib/api";
+import { SourceStatusLine } from "@/components/source-status";
+import { api, apiRequest, type DocumentList, type Health, type Profile, type SourceStatus } from "@/lib/api";
+import { DocumentRow } from "./regulations/document-row";
 import { can, requireOrganization } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ profile?: string }> }) {
-  const [{ me, org }, health, profile, params] = await Promise.all([
+  const since = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+  const [{ me, org }, health, profile, params, sources, recent] = await Promise.all([
     requireOrganization(),
     api.health(),
     apiRequest<{ profile: Profile }>("/organization/profile"),
     searchParams,
+    apiRequest<{ data: SourceStatus[] }>("/sources"),
+    apiRequest<DocumentList>(`/regulatory-documents?relevance=profile&from=${since}&limit=5`),
   ]);
 
   const firstName = me.user.name.split(" ")[0];
@@ -62,14 +67,39 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
         )}
       </section>
 
-      <section aria-labelledby="next-heading" className="mt-12">
-        <h2 id="next-heading" className="text-lg font-semibold">
-          Regulatory monitoring
+      <section aria-labelledby="monitoring-heading" className="mt-12">
+        <h2 id="monitoring-heading" className="text-lg font-semibold">
+          New for your profile in the last 30 days
         </h2>
-        <p className="mt-2 max-w-[62ch] text-sm text-muted">
-          Monitoring of the Federal Register for CMS, HHS, OCR, OIG and ONC publications arrives in the next
-          release. Until then, no regulatory updates are shown here.
-        </p>
+        <div className="mt-2">{sources.ok && <SourceStatusLine sources={sources.data.data} />}</div>
+        {recent.ok && recent.data.meta.profile_filter_unavailable ? (
+          <p className="mt-4 max-w-[62ch] text-sm text-muted">
+            Select federal programs in the regulatory profile and RuleRadar will list publications that amend the
+            regulations linked to them.
+          </p>
+        ) : recent.ok && recent.data.data.length > 0 ? (
+          <>
+            <ol className="mt-4 divide-y divide-rule border-y border-rule">
+              {recent.data.data.map((doc) => (
+                <DocumentRow key={doc.id} doc={doc} />
+              ))}
+            </ol>
+            <p className="mt-3 text-sm">
+              <Link href={`/regulations?relevance=profile&from=${since}`} className="text-signal underline-offset-4 hover:underline">
+                {recent.data.meta.total > 5 ? `See all ${recent.data.meta.total}` : "Open in Regulatory intelligence"}
+              </Link>
+            </p>
+          </>
+        ) : recent.ok ? (
+          <p className="mt-4 max-w-[62ch] text-sm text-muted">
+            No publications in the last 30 days amend a CFR part linked to your profile.{" "}
+            <Link href="/regulations" className="text-signal underline-offset-4 hover:underline">
+              Browse everything retrieved
+            </Link>
+          </p>
+        ) : (
+          <p role="alert" className="mt-4 text-sm">{recent.error.message}</p>
+        )}
       </section>
 
       <section aria-labelledby="system-heading" className="mt-12">

@@ -121,12 +121,24 @@ function frDocuments(): array
  */
 function fakeFederalRegister(array $documents, int $searchStatus = 200): void
 {
+    // Later calls in the same test change what the fake serves: Laravel
+    // keeps the first registered stubs, so the stubs read this state.
+    app()->instance('fr.fake', ['documents' => array_values($documents), 'status' => $searchStatus]);
+    if (app()->bound('fr.fake.registered')) {
+        return;
+    }
+    app()->instance('fr.fake.registered', true);
+
     config(['sources.federal_register.retry_sleep_ms' => 0]);
     Http::preventStrayRequests();
     Http::fake([
-        'www.federalregister.gov/api/v1/documents.json*' => $searchStatus === 200
-            ? Http::response(['count' => count($documents), 'total_pages' => 1, 'results' => array_values($documents)])
-            : Http::response(['errors' => 'unavailable'], $searchStatus),
+        'www.federalregister.gov/api/v1/documents.json*' => function () {
+            $state = app('fr.fake');
+
+            return $state['status'] === 200
+                ? Http::response(['count' => count($state['documents']), 'total_pages' => 1, 'results' => $state['documents']])
+                : Http::response(['errors' => 'unavailable'], $state['status']);
+        },
         'www.federalregister.gov/documents/full_text/text/2026/10/01/2026-20134.txt' => Http::response(
             file_get_contents(__DIR__.'/Fixtures/federal_register/document-2026-20134.raw.txt'),
             200,
