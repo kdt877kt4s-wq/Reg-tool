@@ -81,6 +81,20 @@ jobs:
       - name: Report test failures
         if: failure()
         run: python3 ../../.github/scripts/junit-annotations.py junit.xml
+      - name: Live Federal Register check
+        # Polls the real Federal Register for the last 7 days into the CI
+        # database. Not blocking: an outage there must not fail our build,
+        # but the result is reported on every run.
+        continue-on-error: true
+        env:
+          DB_DATABASE: ruleradar_test
+          QUEUE_CONNECTION: sync
+        run: |
+          set -o pipefail
+          php artisan migrate:fresh --force --seed > /dev/null
+          php artisan ruleradar:poll federal_register --days=7 2>&1 | tee poll.log
+          summary=$(php artisan ruleradar:source-report 2>/dev/null || echo '{}')
+          echo "::notice title=Live Federal Register poll::$(tail -1 poll.log) | ${summary}"
       - name: Dependency audit
         run: composer audit
 

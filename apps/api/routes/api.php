@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\PublicInvitationController;
+use App\Http\Controllers\Api\V1\RegulatoryDocumentController;
+use App\Http\Controllers\Api\V1\SourceController;
 use App\Http\Controllers\Api\V1\TaxonomyController;
 use Illuminate\Support\Facades\Route;
 
@@ -66,6 +68,12 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::get('departments', [DepartmentController::class, 'index'])->name('departments.index');
         Route::post('departments', [DepartmentController::class, 'store'])->name('departments.store');
         Route::patch('departments/{departmentId}', [DepartmentController::class, 'update'])->whereNumber('departmentId')->name('departments.update');
+
+        Route::get('sources', [SourceController::class, 'index'])->name('sources.index');
+        Route::get('regulatory-documents', [RegulatoryDocumentController::class, 'index'])->name('documents.index');
+        Route::get('regulatory-documents/facets', [RegulatoryDocumentController::class, 'facets'])->name('documents.facets');
+        Route::get('regulatory-documents/{documentId}', [RegulatoryDocumentController::class, 'show'])->whereNumber('documentId')->name('documents.show');
+        Route::get('regulatory-documents/{documentId}/passages', [RegulatoryDocumentController::class, 'passages'])->whereNumber('documentId')->name('documents.passages');
 
         Route::get('audit-events', [AuditEventController::class, 'index'])->name('audit.index');
         Route::get('audit-events/verify', [AuditEventController::class, 'verify'])->name('audit.verify');

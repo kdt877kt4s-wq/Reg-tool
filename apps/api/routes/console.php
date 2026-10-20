@@ -1,4 +1,28 @@
 <?php
 
-// Scheduled jobs (Federal Register polling, reconciliation, audit-chain
-// verification) are registered here starting in Stage 2.
+use Illuminate\Support\Facades\Schedule;
+
+/*
+| Federal Register publishes each weekday morning (Eastern). Two polls a
+| weekday catch the issue and late-indexed documents; a nightly look back
+| over 30 days catches corrections and metadata changes.
+*/
+Schedule::command('ruleradar:poll federal_register')
+    ->weekdays()
+    ->at('06:30')
+    ->timezone('America/Chicago')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+Schedule::command('ruleradar:poll federal_register')
+    ->weekdays()
+    ->at('12:30')
+    ->timezone('America/Chicago')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+Schedule::command('ruleradar:poll federal_register --days=30')
+    ->dailyAt('02:15')
+    ->timezone('America/Chicago')
+    ->withoutOverlapping()
+    ->onOneServer();

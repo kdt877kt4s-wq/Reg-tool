@@ -1,12 +1,16 @@
 <?php
 
+use App\Ingestion\IngestSource;
+use App\Ingestion\SourceRegistry;
 use App\Models\Membership;
 use App\Models\Organization;
+use App\Models\SourceRun;
 use App\Models\User;
 use App\Security\Totp;
 use App\Support\Role;
 use App\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -81,4 +85,59 @@ function actingIn(User $user, Organization $organization): TestCase
     Sanctum::actingAs($user);
 
     return test()->withHeader('X-Organization-Id', (string) $organization->id);
+}
+
+/*
+| Federal Register fixtures: real API responses recorded by the
+| "Record Federal Register fixtures" workflow.
+*/
+
+/** @return array<string, mixed> */
+function frFixture(string $name): array
+{
+    return json_decode(file_get_contents(__DIR__."/Fixtures/federal_register/{$name}.json"), true, flags: JSON_THROW_ON_ERROR);
+}
+
+/** All recorded documents, keyed by document number. @return array<string, array<string, mixed>> */
+function frDocuments(): array
+{
+    $docs = [];
+    foreach (['document-2026-15588', 'document-2026-20134', 'document-2026-20281'] as $file) {
+        $doc = frFixture($file);
+        $docs[$doc['document_number']] = $doc;
+    }
+    foreach (frFixture('search-cfr-42-422')['results'] as $doc) {
+        $docs[$doc['document_number']] ??= $doc;
+    }
+
+    return $docs;
+}
+
+/**
+ * Fake the Federal Register: every search returns $documents; full text
+ * is served for 2026-20134 (recorded) and 404 for everything else.
+ *
+ * @param  list<array<string, mixed>>  $documents
+ */
+function fakeFederalRegister(array $documents, int $searchStatus = 200): void
+{
+    config(['sources.federal_register.retry_sleep_ms' => 0]);
+    Http::preventStrayRequests();
+    Http::fake([
+        'www.federalregister.gov/api/v1/documents.json*' => $searchStatus === 200
+            ? Http::response(['count' => count($documents), 'total_pages' => 1, 'results' => array_values($documents)])
+            : Http::response(['errors' => 'unavailable'], $searchStatus),
+        'www.federalregister.gov/documents/full_text/text/2026/10/01/2026-20134.txt' => Http::response(
+            file_get_contents(__DIR__.'/Fixtures/federal_register/document-2026-20134.raw.txt'),
+            200,
+            ['Content-Type' => 'text/html'],
+        ),
+        'www.federalregister.gov/documents/full_text/*' => Http::response('Not found', 404),
+    ]);
+}
+
+/** Run one Federal Register poll over a wide window. */
+function pollFederalRegister(): SourceRun
+{
+    return app(IngestSource::class)->run(app(SourceRegistry::class)->adapter('federal_register'), 400);
 }

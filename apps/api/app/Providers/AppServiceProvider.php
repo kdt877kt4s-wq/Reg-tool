@@ -68,6 +68,8 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->id ?: $request->ip()));
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(strtolower((string) $request->input('email')).'|'.$request->ip()));
         RateLimiter::for('mfa', fn (Request $request) => Limit::perMinute(5)->by((string) ($request->input('challenge') ?: $request->user()?->id).'|'.$request->ip()));
+        // Outbound: fetching publication text from government sources.
+        RateLimiter::for('source-text', fn () => Limit::perMinute(60));
         RateLimiter::for('public-forms', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
     }
 }

@@ -33,6 +33,8 @@ $matrix = [
     'invite member' => ['POST', '/api/v1/organization/invitations', ['email' => 'new.person@example.test', 'role' => 'employee'], ['org_admin' => 201, 'compliance_officer' => 403, 'department_manager' => 403, 'employee' => 403, 'auditor' => 403]],
     'list departments' => ['GET', '/api/v1/departments', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 200, 'employee' => 200, 'auditor' => 200]],
     'create department' => ['POST', '/api/v1/departments', ['name' => 'Quality'], ['org_admin' => 201, 'compliance_officer' => 403, 'department_manager' => 403, 'employee' => 403, 'auditor' => 403]],
+    'search regulations' => ['GET', '/api/v1/regulatory-documents', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 200, 'employee' => 200, 'auditor' => 200]],
+    'view source status' => ['GET', '/api/v1/sources', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 200, 'employee' => 200, 'auditor' => 200]],
     'view audit log' => ['GET', '/api/v1/audit-events', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 403, 'employee' => 403, 'auditor' => 200]],
 ];
 
@@ -52,5 +54,5 @@ it('returns the resolved permission list for the current role', function () {
 
     actingIn($auditor, $this->org)->getJson('/api/v1/organization')
         ->assertOk()
-        ->assertJsonPath('permissions', ['departments.view', 'profile.view', 'audit.view']);
+        ->assertJsonPath('permissions', ['departments.view', 'profile.view', 'audit.view', 'regulations.view']);
 });
