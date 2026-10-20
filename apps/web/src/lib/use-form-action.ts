@@ -7,8 +7,8 @@ import { useActionState, useTransition } from "react";
  * reset the form afterwards: when the server rejects a field, everything
  * the person entered stays in place.
  */
-export function useFormAction<S>(action: (prev: S, form: FormData) => Promise<S>, initial: S) {
-  const [state, dispatch, pending] = useActionState(action, initial);
+export function useFormAction<S>(action: (prev: Awaited<S>, form: FormData) => S | Promise<S>, initial: Awaited<S>) {
+  const [state, dispatch, pending] = useActionState<S, FormData>(action, initial);
   const [, startTransition] = useTransition();
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
