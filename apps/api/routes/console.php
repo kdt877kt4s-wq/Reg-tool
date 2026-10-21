@@ -33,3 +33,14 @@ Schedule::command('ruleradar:daily-notifications')
     ->timezone('America/Chicago')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Integrity and retention.
+Schedule::command('ruleradar:audit-verify')
+    ->dailyAt('03:30')
+    ->timezone('America/Chicago')
+    ->onOneServer();
+
+Schedule::command('ruleradar:prune')
+    ->dailyAt('03:45')
+    ->timezone('America/Chicago')
+    ->onOneServer();

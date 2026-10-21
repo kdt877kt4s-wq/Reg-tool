@@ -261,6 +261,10 @@ jobs:
         run: |
           enc() { sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g'; }
           [ -f apps/web/e2e-results.xml ] && python3 .github/scripts/junit-annotations.py apps/web/e2e-results.xml || true
+          # The page as the browser saw it when the step failed.
+          for f in $(find apps/web/test-results -name error-context.md 2>/dev/null); do
+            echo "::error title=Page at failure::$(head -c 3500 "$f" | enc)"
+          done
           for f in api-server.log web-server.log apps/api/storage/logs/laravel.log; do
             [ -f "$f" ] && echo "::error title=$(basename $f) (tail)::$(grep -v 'Content-Transfer\|^--' "$f" | tail -c 3000 | enc)" || true
           done

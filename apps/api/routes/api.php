@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SourceController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TaxonomyController;
+use App\Http\Controllers\Api\V1\Webhooks\MalwareScanController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,6 +33,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->name('v1.')->group(function () {
     Route::get('health', HealthController::class)->name('health');
     Route::get('taxonomy', [TaxonomyController::class, 'index'])->name('taxonomy.index');
+    Route::post('webhooks/malware-scan', MalwareScanController::class)->middleware('throttle:60,1')->name('webhooks.malware-scan');
 
     // Public account routes.
     Route::middleware('throttle:public-forms')->group(function () {

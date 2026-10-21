@@ -26,6 +26,7 @@ final class Notifier
         'task_overdue' => 'A task of yours is overdue',
         'profile_matches' => 'New publications match your regulatory profile',
         'source_changed' => 'An approved assessment needs another look',
+        'file_blocked' => 'Evidence was blocked by the malware scan',
     ];
 
     public function __construct(private TenantContext $context) {}

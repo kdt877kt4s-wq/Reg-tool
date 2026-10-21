@@ -191,7 +191,10 @@ class TaskController extends Controller
         $task = Task::query()->findOrFail($evidence->task_id);
         abort_unless($this->access->canSee($task), 404);
 
-        if ($file->scan_status === 'infected' || (config('files.require_scan') && $file->scan_status !== 'clean')) {
+        if ($file->scan_status === 'infected') {
+            return response()->json(['message' => 'This file was blocked: the malware scan flagged it.', 'code' => 'file_infected'], 423);
+        }
+        if (config('files.require_scan') && $file->scan_status !== 'clean') {
             return response()->json(['message' => 'This file is not available until it passes a malware scan.', 'code' => 'file_not_scanned'], 423);
         }
 

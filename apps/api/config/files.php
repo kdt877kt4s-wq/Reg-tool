@@ -12,4 +12,9 @@ return [
 
     // When true, files download only after a scanner marks them clean.
     'require_scan' => (bool) env('EVIDENCE_REQUIRE_SCAN', false),
+
+    // Defender for Storage scan results arrive by Event Grid webhook,
+    // authenticated with this secret (?key= in the subscription URL).
+    'scan_webhook_secret' => env('MALWARE_SCAN_WEBHOOK_SECRET', ''),
+    'scan_container' => env('AZURE_STORAGE_CONTAINER', 'tenant-files'),
 ];

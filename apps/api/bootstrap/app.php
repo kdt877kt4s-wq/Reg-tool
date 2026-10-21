@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\RequireMfaEnrollment;
 use App\Http\Middleware\ResetTenantContext;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -17,7 +18,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Every API request starts with no tenant and no bypass.
         $middleware->api(prepend: [ResetTenantContext::class]);
+        $middleware->api(append: [SecurityHeaders::class]);
         $middleware->throttleApi();
+
+        // Azure Container Apps terminates TLS in front of the app.
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES', '127.0.0.1'));
 
         $middleware->alias([
             'tenant' => SetTenantContext::class,
