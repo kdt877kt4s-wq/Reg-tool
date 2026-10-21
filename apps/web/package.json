@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
-    "audit:dev": "npm audit --audit-level=critical"
+    "audit:dev": "npm audit --audit-level=critical",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -22,6 +23,7 @@
     "tailwind-merge": "^3.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@types/node": "^22.0.0",
     "@types/qrcode": "^1.5.5",

@@ -111,7 +111,11 @@ function AnalysisBody({ analysis, documentId }: { analysis: Analysis; documentId
         )}
         <span className="px-1 py-0.5 text-muted">
           {analysis.passages_sent} passages reviewed, {formatDateTime(analysis.completed_at)}
+          {analysis.model && `, model ${analysis.model}`}
         </span>
+        {analysis.model === "e2e-scripted" && (
+          <span className="rounded-sm border border-caution/50 px-2 py-0.5 font-medium text-caution">Test output, not a real analysis</span>
+        )}
       </div>
       {o.confidence_reason && <p className="text-muted">{o.confidence_reason}</p>}
 

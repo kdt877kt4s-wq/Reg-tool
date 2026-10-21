@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Ai\AnthropicModel;
 use App\Ai\Embedder;
 use App\Ai\LanguageModel;
+use App\Ai\ScriptedModel;
 use App\Tenancy\TenantContext;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -27,7 +28,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(TenantContext::class);
 
         // AI: server-side only. Keys come from configuration, never the web app.
-        $this->app->bind(LanguageModel::class, fn () => new AnthropicModel(config('ai.anthropic')));
+        // The end-to-end test environment uses a labelled scripted stand-in.
+        $this->app->bind(LanguageModel::class, fn () => $this->app->environment('e2e')
+            ? new ScriptedModel
+            : new AnthropicModel(config('ai.anthropic')));
         $this->app->bind(Embedder::class, fn () => new Embedder(config('ai.voyage')));
     }
 
