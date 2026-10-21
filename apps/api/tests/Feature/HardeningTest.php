@@ -2,6 +2,7 @@
 
 use App\Models\UserNotification;
 use App\Support\Role;
+use Illuminate\Cache\RateLimiter;
 
 it('sends security headers on every API response', function () {
     $res = $this->getJson('/api/v1/health');
@@ -42,7 +43,7 @@ it('rate-limits signed-in people separately, not by the web server\'s address', 
     $b = addMember($org, Role::Employee);
 
     $key = fn ($user) => 'user:'.$user->id;
-    $limiter = app(Illuminate\Cache\RateLimiter::class);
+    $limiter = app(RateLimiter::class);
     actingIn($a, $org)->getJson('/api/v1/organization')->assertOk();
     actingIn($b, $org)->getJson('/api/v1/organization')->assertOk();
 
