@@ -174,6 +174,7 @@ test("compliance MVP: profile to cited analysis to approved, evidenced task", as
   await expect(o.getByText(/The organization's audit log is intact/)).toBeVisible();
   await expect(o.getByText("ipf-claims-review.pdf")).toBeVisible();
   await o.goto("/reports/tasks");
+  await expect(o.locator("main")).toContainText("Download CSV");
   const csv = o.waitForEvent("download");
   await o.getByRole("link", { name: "Download CSV" }).click();
   expect((await csv).suggestedFilename()).toMatch(/^ruleradar-task-status-.*\.csv$/);
