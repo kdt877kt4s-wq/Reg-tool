@@ -139,6 +139,7 @@ class RegulatoryDocumentController extends Controller
         $request->validate([
             'q' => ['sometimes', 'nullable', 'string', 'max:200'],
             'page' => ['sometimes', 'integer', 'min:1'],
+            'around' => ['sometimes', 'integer', 'min:1'],
         ]);
 
         $document = RegulatoryDocument::query()->findOrFail($documentId, ['id', 'current_version', 'text_status']);
@@ -156,7 +157,14 @@ class RegulatoryDocumentController extends Controller
                 ->selectRaw("ts_headline('english', text, websearch_to_tsquery('english', ?), 'StartSel=[[[, StopSel=]]], MaxWords=40, MinWords=15, MaxFragments=2') as snippet", [$q]);
         }
 
-        $page = $query->paginate(50);
+        // Open the page that contains a cited passage.
+        $pageNumber = null;
+        if ($q === '' && $request->filled('around')) {
+            $ordinal = RegulatoryPassage::query()->where('version_id', $versionId)->whereKey((int) $request->input('around'))->value('ordinal');
+            $pageNumber = $ordinal ? (int) ceil($ordinal / 50) : null;
+        }
+
+        $page = $query->paginate(50, ['*'], 'page', $pageNumber);
 
         return response()->json([
             'data' => collect($page->items())->map(fn (RegulatoryPassage $p) => [

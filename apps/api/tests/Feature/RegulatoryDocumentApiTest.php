@@ -2,6 +2,7 @@
 
 use App\Models\OrganizationProfile;
 use App\Models\RegulatoryDocument;
+use App\Models\RegulatoryPassage;
 use App\Support\Role;
 use Database\Seeders\HealthcareTaxonomySeeder;
 
@@ -97,6 +98,16 @@ it('searches inside a document and marks matches in plain text', function () {
     expect($passages)->not->toBeEmpty()
         ->and($passages[0]['snippet'])->toContain('[[[')
         ->and($passages[0]['snippet'])->not->toContain('<b>');
+});
+
+it('opens the page of text that contains a cited passage', function () {
+    $id = RegulatoryDocument::where('external_id', '2026-20134')->value('id');
+    $passage = RegulatoryPassage::where('document_id', $id)->orderByDesc('ordinal')->first();
+
+    actingIn($this->employee, $this->org)->getJson("/api/v1/regulatory-documents/{$id}/passages?around={$passage->id}")
+        ->assertOk()
+        ->assertJsonPath('meta.page', 1)
+        ->assertJsonFragment(['id' => $passage->id]);
 });
 
 it('reports source health', function () {

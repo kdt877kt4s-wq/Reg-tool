@@ -73,7 +73,7 @@ TXT;
         $text = "<document_record>\n".json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n</document_record>\n\n"
             ."<organization_profile>\n".json_encode($profile, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n</organization_profile>\n\n"
             ."<prescreen>\n{$prescreen}\n</prescreen>\n\n"
-            ."<document_passages count=\"".count($refs)."\">\n".implode("\n\n", $lines)."\n</document_passages>\n\n"
+            .'<document_passages count="'.count($refs)."\">\n".implode("\n\n", $lines)."\n</document_passages>\n\n"
             .'Analyze this document for the organization above and call record_impact_analysis.';
 
         return ['text' => $text, 'refs' => $refs];

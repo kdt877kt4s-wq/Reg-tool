@@ -44,6 +44,7 @@ jobs:
           coverage: none
           tools: composer:v2
       - name: Install dependencies
+        id: install
         run: |
           composer install --no-interaction --prefer-dist --no-progress
           echo "::notice title=Resolved versions::$(composer show laravel/framework pestphp/pest --format=text 2>/dev/null | grep -E '^(name|versions)' | tr '\n' ' ')"
@@ -60,18 +61,6 @@ jobs:
             -c "CREATE EXTENSION IF NOT EXISTS vector" -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
       - name: Prepare environment
         run: cp .env.example .env && php artisan key:generate
-      - name: Code style (Pint)
-        run: |
-          if ! vendor/bin/pint --test; then
-            # Apply the fixes in the runner and report each file's diff as
-            # an annotation, so the needed change is readable on the run.
-            vendor/bin/pint > /dev/null || true
-            for f in $(git diff --name-only -- .); do
-              body=$(git diff -U0 -- "../../$f" | grep -E '^[+-][^+-]' | head -20 | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
-              echo "::error file=$f,title=Pint::${body}"
-            done
-            exit 1
-          fi
       - name: Migrate and seed (runs the real migrations against Postgres + pgvector)
         env:
           DB_DATABASE: ruleradar_test
@@ -87,6 +76,19 @@ jobs:
       - name: Report test failures
         if: failure()
         run: python3 ../../.github/scripts/junit-annotations.py junit.xml
+      - name: Code style (Pint)
+        if: always() && steps.install.outcome == 'success'
+        run: |
+          if ! vendor/bin/pint --test; then
+            # Apply the fixes in the runner and report each file's diff as
+            # an annotation, so the needed change is readable on the run.
+            vendor/bin/pint > /dev/null || true
+            for f in $(git diff --name-only -- .); do
+              body=$(git diff -U0 -- "../../$f" | grep -E '^[+-][^+-]' | head -20 | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+              echo "::error file=$f,title=Pint::${body}"
+            done
+            exit 1
+          fi
       - name: Live Federal Register check
         # Polls the real Federal Register for the last 7 days into the CI
         # database and reports what happened. Not blocking: an outage there

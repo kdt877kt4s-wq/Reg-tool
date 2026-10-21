@@ -119,7 +119,6 @@ final class AnalysisValidator
     }
 
     /**
-     * @param  mixed  $claims
      * @param  array<string, int>  $refs
      * @param  array<int, string>  $passageText
      * @return list<array<string, mixed>>
@@ -169,7 +168,6 @@ final class AnalysisValidator
     /**
      * Map refs to passage ids. Null when any ref was not provided.
      *
-     * @param  mixed  $citations
      * @param  array<string, int>  $refs
      * @return list<int>|null
      */
