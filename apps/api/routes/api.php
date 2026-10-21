@@ -3,11 +3,11 @@
 use App\Http\Controllers\Api\V1\AnalysisController;
 use App\Http\Controllers\Api\V1\AssessmentController;
 use App\Http\Controllers\Api\V1\AuditEventController;
-use App\Http\Controllers\Api\V1\CalendarController;
-use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\MfaController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
+use App\Http\Controllers\Api\V1\CalendarController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DepartmentController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InvitationController;
@@ -93,6 +93,7 @@ Route::prefix('v1')->name('v1.')->group(function () {
 
         Route::get('tasks', [TaskController::class, 'index'])->name('tasks.index');
         Route::post('tasks', [TaskController::class, 'store'])->name('tasks.store');
+        Route::get('tasks/assignees', [TaskController::class, 'assignees'])->name('tasks.assignees');
         Route::get('tasks/{taskId}', [TaskController::class, 'show'])->whereNumber('taskId')->name('tasks.show');
         Route::patch('tasks/{taskId}', [TaskController::class, 'update'])->whereNumber('taskId')->name('tasks.update');
         Route::post('tasks/{taskId}/evidence', [TaskController::class, 'addEvidence'])->whereNumber('taskId')->name('tasks.evidence');

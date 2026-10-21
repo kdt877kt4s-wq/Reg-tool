@@ -13,6 +13,7 @@ use App\Models\TaskEvidence;
 use App\Tasks\TaskAccess;
 use App\Tasks\TaskWorkflow;
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +52,41 @@ class TaskController extends Controller
             'data' => $query->limit(200)->get()->map(fn (Task $t) => $this->summary($t))->values(),
             'can_create' => $this->access->canCreate($this->tenant()->membership()->department_id) || $this->access->canCreate(null),
         ]);
+    }
+
+    /** People the current person may assign tasks to. */
+    public function assignees(): JsonResponse
+    {
+        $membership = $this->tenant()->membership();
+        abort_unless($this->access->canCreate(null) || $this->access->canCreate($membership->department_id), 403);
+
+        $rows = $this->assignable()
+            ->with(['user:id,name', 'department:id,name'])
+            ->get()
+            ->sortBy(fn (Membership $m) => mb_strtolower($m->user->name))
+            ->map(fn (Membership $m) => [
+                'id' => $m->user_id,
+                'name' => $m->user->name,
+                'role_label' => $m->role->label(),
+                'department' => $m->department ? ['id' => $m->department->id, 'name' => $m->department->name] : null,
+            ])->values();
+
+        return response()->json([
+            'data' => $rows,
+            'departments' => Department::query()
+                ->when(! $this->access->canCreate(null), fn ($q) => $q->whereKey($membership->department_id))
+                ->orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    /** Active members; a department manager may assign only within their department. */
+    private function assignable(): Builder
+    {
+        $membership = $this->tenant()->membership();
+
+        return Membership::query()
+            ->where('status', Membership::ACTIVE)
+            ->when(! $this->access->canCreate(null), fn ($q) => $q->where('department_id', $membership->department_id));
     }
 
     public function store(Request $request): JsonResponse
@@ -208,8 +244,10 @@ class TaskController extends Controller
     private function activeMember(): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail) {
-            if ($value !== null && ! Membership::query()->where('user_id', $value)->where('status', Membership::ACTIVE)->exists()) {
-                $fail('That person is not an active member of this organization.');
+            if ($value !== null && ! $this->assignable()->where('user_id', $value)->exists()) {
+                $fail($this->access->canCreate(null)
+                    ? 'That person is not an active member of this organization.'
+                    : 'You can assign tasks only to people in your department.');
             }
         };
     }

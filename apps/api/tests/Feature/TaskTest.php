@@ -14,6 +14,7 @@ use App\Support\Role;
 use Database\Seeders\HealthcareTaxonomySeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
@@ -171,7 +172,7 @@ it('returns a task with a reason and tells the owner', function () {
 
 it('keeps task history append-only', function () {
     $task = newTask();
-    asSystem(fn () => expect(fn () => TaskEvent::where('task_id', $task['id'])->update(['type' => 'tampered']))->toThrow(QueryException::class));
+    asSystem(fn () => expect(fn () => DB::transaction(fn () => TaskEvent::where('task_id', $task['id'])->update(['type' => 'tampered'])))->toThrow(QueryException::class));
 });
 
 it('rejects evidence file types outside the allowlist', function () {
@@ -251,4 +252,20 @@ it('turns accepted actions into tasks when an assessment is approved', function 
     actingIn($this->officer, $this->org)->postJson("{$base}/reopen")->assertOk();
     actingIn($this->officer, $this->org)->postJson("{$base}/approve")->assertOk()->assertJsonPath('tasks_created', 0);
     asSystem(fn () => expect(Task::where('document_id', $document->id)->count())->toBe(1));
+});
+
+it('lists who a person may assign tasks to', function () {
+    $all = actingIn($this->officer, $this->org)->getJson('/api/v1/tasks/assignees')->assertOk()->json('data');
+    expect(collect($all)->pluck('id'))->toContain($this->colleague->id);
+
+    $claimsOnly = actingIn($this->manager, $this->org)->getJson('/api/v1/tasks/assignees')->assertOk();
+    expect(collect($claimsOnly->json('data'))->pluck('id')->sort()->values()->all())
+        ->toBe(collect([$this->manager->id, $this->employee->id])->sort()->values()->all())
+        ->and($claimsOnly->json('departments'))->toHaveCount(1);
+
+    actingIn($this->employee, $this->org)->getJson('/api/v1/tasks/assignees')->assertForbidden();
+
+    actingIn($this->manager, $this->org)->postJson('/api/v1/tasks', [
+        'title' => 'Pharmacy person', 'priority' => 'low', 'department_id' => $this->claims->id, 'owner_id' => $this->colleague->id,
+    ])->assertUnprocessable()->assertJsonValidationErrors(['owner_id']);
 });
