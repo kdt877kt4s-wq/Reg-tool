@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\V1\AnalysisController;
 use App\Http\Controllers\Api\V1\AssessmentController;
 use App\Http\Controllers\Api\V1\AuditEventController;
+use App\Http\Controllers\Api\V1\CalendarController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\MfaController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
@@ -10,11 +12,13 @@ use App\Http\Controllers\Api\V1\DepartmentController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InvitationController;
 use App\Http\Controllers\Api\V1\MemberController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\PublicInvitationController;
 use App\Http\Controllers\Api\V1\RegulatoryDocumentController;
 use App\Http\Controllers\Api\V1\SourceController;
+use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TaxonomyController;
 use Illuminate\Support\Facades\Route;
 
@@ -86,6 +90,24 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::put('regulatory-documents/{documentId}/assessment', [AssessmentController::class, 'update'])->whereNumber('documentId')->name('assessments.update');
         Route::post('regulatory-documents/{documentId}/assessment/approve', [AssessmentController::class, 'approve'])->whereNumber('documentId')->name('assessments.approve');
         Route::post('regulatory-documents/{documentId}/assessment/reopen', [AssessmentController::class, 'reopen'])->whereNumber('documentId')->name('assessments.reopen');
+
+        Route::get('tasks', [TaskController::class, 'index'])->name('tasks.index');
+        Route::post('tasks', [TaskController::class, 'store'])->name('tasks.store');
+        Route::get('tasks/{taskId}', [TaskController::class, 'show'])->whereNumber('taskId')->name('tasks.show');
+        Route::patch('tasks/{taskId}', [TaskController::class, 'update'])->whereNumber('taskId')->name('tasks.update');
+        Route::post('tasks/{taskId}/evidence', [TaskController::class, 'addEvidence'])->whereNumber('taskId')->name('tasks.evidence');
+        Route::post('tasks/{taskId}/{action}', [TaskController::class, 'transition'])
+            ->whereNumber('taskId')->whereIn('action', ['start', 'submit', 'accept', 'return', 'cancel'])->name('tasks.transition');
+        Route::get('files/{fileId}/download', [TaskController::class, 'download'])->whereNumber('fileId')->name('files.download');
+
+        Route::get('calendar', [CalendarController::class, 'index'])->name('calendar.index');
+        Route::get('dashboard/summary', [DashboardController::class, 'summary'])->name('dashboard.summary');
+
+        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::post('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+        Route::post('notifications/{notificationId}/read', [NotificationController::class, 'read'])->whereNumber('notificationId')->name('notifications.read');
+        Route::get('notification-preferences', [NotificationController::class, 'preferences'])->name('notifications.preferences');
+        Route::put('notification-preferences', [NotificationController::class, 'updatePreferences'])->name('notifications.preferences.update');
 
         Route::get('audit-events', [AuditEventController::class, 'index'])->name('audit.index');
         Route::get('audit-events/verify', [AuditEventController::class, 'verify'])->name('audit.verify');

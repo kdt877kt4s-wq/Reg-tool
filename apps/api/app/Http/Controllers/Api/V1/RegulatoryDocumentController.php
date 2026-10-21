@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\OrganizationProfile;
 use App\Models\RegulatoryDocument;
 use App\Models\RegulatoryPassage;
 use App\Models\RegulatoryRelation;
-use App\Models\TaxonomyTerm;
+use App\Regulations\ProfileMatcher;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -228,34 +227,16 @@ class RegulatoryDocumentController extends Controller
             ->orderByDesc('publication_date');
     }
 
-    /**
-     * CFR parts tied to the programs in the organization's profile. These
-     * are screening hints: a match means "this document amends a part
-     * linked to a program you selected", not that it applies to you.
-     *
-     * @return list<string>
-     */
+    /** @return list<string> */
     private function profileCfrParts(): array
     {
-        $programs = OrganizationProfile::query()->value('programs');
-        $codes = is_string($programs) ? json_decode($programs, true) : $programs;
-        if (! is_array($codes) || $codes === []) {
-            return [];
-        }
-
-        return TaxonomyTerm::query()
-            ->where('kind', 'program')
-            ->whereIn('code', $codes)
-            ->pluck('metadata')
-            ->map(fn ($m) => is_string($m) ? json_decode($m, true) : $m)
-            ->flatMap(fn ($m) => is_array($m) ? ($m['cfr_parts'] ?? []) : [])
-            ->unique()->sort()->values()->all();
+        return app(ProfileMatcher::class)->parts();
     }
 
     /** @param list<string> $values */
     private function pgArray(array $values): string
     {
-        return '{'.implode(',', array_map(fn ($v) => '"'.str_replace(['\\', '"'], ['\\\\', '\\"'], $v).'"', $values)).'}';
+        return ProfileMatcher::pgArray($values);
     }
 
     /**

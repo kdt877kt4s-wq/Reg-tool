@@ -36,6 +36,11 @@ $matrix = [
     'search regulations' => ['GET', '/api/v1/regulatory-documents', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 200, 'employee' => 200, 'auditor' => 200]],
     'view source status' => ['GET', '/api/v1/sources', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 200, 'employee' => 200, 'auditor' => 200]],
     'review queue' => ['GET', '/api/v1/assessments', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 200, 'employee' => 200, 'auditor' => 200]],
+    'list tasks' => ['GET', '/api/v1/tasks', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 200, 'employee' => 200, 'auditor' => 200]],
+    'create task' => ['POST', '/api/v1/tasks', ['title' => 'Review the new rule', 'priority' => 'medium'], ['org_admin' => 201, 'compliance_officer' => 201, 'department_manager' => 403, 'employee' => 403, 'auditor' => 403]],
+    'view calendar' => ['GET', '/api/v1/calendar?from=2026-10-01&to=2026-10-31', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 200, 'employee' => 200, 'auditor' => 200]],
+    'view dashboard' => ['GET', '/api/v1/dashboard/summary', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 200, 'employee' => 200, 'auditor' => 200]],
+    'list notifications' => ['GET', '/api/v1/notifications', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 200, 'employee' => 200, 'auditor' => 200]],
     'view audit log' => ['GET', '/api/v1/audit-events', [], ['org_admin' => 200, 'compliance_officer' => 200, 'department_manager' => 403, 'employee' => 403, 'auditor' => 200]],
 ];
 

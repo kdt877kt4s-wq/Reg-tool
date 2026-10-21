@@ -26,3 +26,10 @@ Schedule::command('ruleradar:poll federal_register --days=30')
     ->timezone('America/Chicago')
     ->withoutOverlapping()
     ->onOneServer();
+
+// Reminders and digests go out before the working day starts.
+Schedule::command('ruleradar:daily-notifications')
+    ->dailyAt('07:00')
+    ->timezone('America/Chicago')
+    ->withoutOverlapping()
+    ->onOneServer();

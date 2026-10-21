@@ -10,6 +10,7 @@ use App\Models\RegulatoryDocument;
 use App\Models\RegulatoryPassage;
 use App\Models\SuggestedAction;
 use App\Models\TaxonomyTerm;
+use App\Tasks\TaskWorkflow;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -202,7 +203,7 @@ class AssessmentController extends Controller
         return response()->json(['data' => $this->present($assessment->fresh(['actions', 'approver:id,name', 'editor:id,name']), $document)]);
     }
 
-    public function approve(int $documentId, AuditLogger $audit): JsonResponse
+    public function approve(int $documentId, AuditLogger $audit, TaskWorkflow $tasks): JsonResponse
     {
         $this->authorizePermission('assessments.approve');
         $document = RegulatoryDocument::query()->findOrFail($documentId, ['id', 'current_version']);
@@ -231,7 +232,13 @@ class AssessmentController extends Controller
         ]);
         $audit->record('assessment.approved', $assessment, $before, $this->snapshot($assessment->fresh()));
 
-        return response()->json(['data' => $this->present($assessment->fresh(['actions', 'approver:id,name', 'editor:id,name']), $document)]);
+        // Approval is the human sign-off: accepted actions become tasks.
+        $created = $tasks->syncFromAssessment($assessment);
+
+        return response()->json([
+            'data' => $this->present($assessment->fresh(['actions', 'approver:id,name', 'editor:id,name']), $document),
+            'tasks_created' => $created,
+        ]);
     }
 
     public function reopen(int $documentId, AuditLogger $audit): JsonResponse

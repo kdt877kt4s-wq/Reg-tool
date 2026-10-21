@@ -37,6 +37,7 @@ class ImpactAssessment extends Model
         return [
             'affected_functions' => 'array',
             'document_version' => 'integer',
+            'change_notified_version' => 'integer',
             'approved_at' => 'datetime',
         ];
     }

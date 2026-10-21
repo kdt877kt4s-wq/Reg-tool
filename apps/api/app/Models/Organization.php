@@ -22,6 +22,7 @@ class Organization extends Model
         return [
             'settings' => 'array',
             'data_retention_days' => 'integer',
+            'match_digest_through' => 'datetime',
         ];
     }
 
