@@ -1,6 +1,6 @@
 # ADR 0004: Server-side AI gateway, citation-validated output
 
-Status: Accepted (2026-10-20); embeddings vendor open for confirmation
+Status: Accepted (2026-10-20), updated 2026-10-21 with the Stage 3 implementation
 
 ## Decision
 - All model calls go through one `AiGateway` service, run from queued jobs in the API.
@@ -11,6 +11,17 @@ Status: Accepted (2026-10-20); embeddings vendor open for confirmation
 - Embeddings default to Voyage AI behind an `Embedder` interface (Anthropic offers no embedding
   endpoint). Azure OpenAI embeddings are the alternative if a single-vendor Azure setup is
   preferred.
+
+## As built (Stage 3)
+- Model `claude-sonnet-5-5` via `POST /v1/messages`, `anthropic-version: 2023-06-01`, tool forced
+  with `tool_choice: {type: "tool"}`; retries on 429, 529 and 5xx.
+- Embeddings: Voyage `voyage-4` at 1024 dimensions, optional; without a key, retrieval uses
+  PostgreSQL full-text ranking. Rankings are combined with reciprocal-rank fusion.
+- Passages are sent as `<passage ref="P1">` blocks; delimiter-like text inside is escaped.
+- Validation removes unverifiable statements and records why; output with the wrong shape is
+  retried once, then the analysis is marked failed for manual review.
+- Analyses run in the requesting organization's tenant context, so row-level security applies.
+- One analysis per document version, profile version and prompt version unless rerun.
 
 ## Why
 Traceability is the product's core promise. Validation in code, not just instructions in a

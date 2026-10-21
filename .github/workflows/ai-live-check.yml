@@ -1,0 +1,77 @@
+name: AI live check
+
+# Runs one real impact analysis with Claude against a real Federal Register
+# publication, in a throwaway CI database, and reports how RuleRadar's
+# validator treated the output. Start it manually after adding the
+# ANTHROPIC_API_KEY repository secret (VOYAGE_API_KEY is optional).
+on:
+  workflow_dispatch:
+    inputs:
+      document:
+        description: "Federal Register document number (blank: newest with text)"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      DB_DATABASE: ruleradar_test
+      QUEUE_CONNECTION: sync
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: pdo_pgsql, pgsql, redis
+          coverage: none
+      - name: Install
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Database
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 \
+            -c "CREATE ROLE ruleradar_app LOGIN PASSWORD 'ruleradar_app' NOSUPERUSER NOBYPASSRLS NOCREATEROLE" \
+            -c "CREATE DATABASE ruleradar_test OWNER ruleradar_app"
+          psql -h localhost -U postgres -d ruleradar_test -v ON_ERROR_STOP=1 \
+            -c "CREATE EXTENSION IF NOT EXISTS vector" -c "CREATE EXTENSION IF NOT EXISTS pg_trgm"
+          cp .env.example .env && php artisan key:generate
+          php artisan migrate --force --seed
+      - name: Retrieve publications
+        run: php artisan ruleradar:poll federal_register --days=14
+      - name: Analyze one with Claude
+        env:
+          DOCUMENT: ${{ inputs.document }}
+        run: |
+          # Passed through the environment and checked, never pasted into the script.
+          if [ -n "$DOCUMENT" ] && ! [[ "$DOCUMENT" =~ ^[0-9]{4}-[0-9]{4,6}$ ]]; then echo "::error::Invalid document number"; exit 1; fi
+          enc() { sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g'; }
+          code=0
+          php artisan ruleradar:analysis-live-check $DOCUMENT > live-ai.log 2>&1 || code=$?
+          if [ "$code" -eq 0 ]; then
+            echo "::notice title=AI live check::$(tail -c 3500 live-ai.log | enc)"
+          else
+            echo "::error title=AI live check failed::$(tail -c 3500 live-ai.log | enc)"
+            exit 1
+          fi

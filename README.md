@@ -57,6 +57,29 @@ response fields are verified against recorded real responses (`apps/api/tests/Fi
 refreshed by the "Record Federal Register fixtures" workflow), and every CI run also polls the
 live Federal Register and reports the result.
 
+## AI impact analysis
+
+A compliance officer or administrator starts an analysis from a publication's page. Claude
+(`claude-sonnet-5-5`, Messages API with a forced tool call) receives only stored passages, each
+labelled P1, P2, ... inside data delimiters, plus the organization's profile. Its structured
+answer is then checked in code (`app/Analysis/AnalysisValidator.php`): unknown citations,
+uncited claims about the regulation, quotes that are not in the cited passage, deadlines not
+stated in the source and uncited actions are removed, reported on the page, and lower the
+confidence. A compliance officer approves the human assessment; the AI output is never edited.
+
+Configuration (server-side only, never in the web app):
+
+| Variable | Purpose |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | Required for analyses. Without it the page says AI is not set up. |
+| `VOYAGE_API_KEY` | Optional. Adds semantic passage retrieval (`voyage-4`, 1024 dims). |
+| `AI_ANALYSIS_MODEL` | Optional override of the model ID. |
+
+To try it against the real Claude before deployment, add `ANTHROPIC_API_KEY` (and optionally
+`VOYAGE_API_KEY`) as GitHub repository secrets, then run the **AI live check** workflow. It
+analyzes a real publication in a throwaway CI database and reports what the validator kept and
+removed.
+
 ## Tests
 
 ```bash
@@ -73,7 +96,7 @@ CI runs both suites, a Bicep compile and dependency audits on every push and pul
 | 0 | Foundations: monorepo, dev stack, CI, taxonomy, ADRs | Done |
 | 1 | Tenancy, auth, MFA, roles, audit log, profile wizard | Done |
 | 2 | Federal Register ingestion and Regulatory Intelligence | Done |
-| 3 | AI analysis with citations, review and approval | Planned |
+| 3 | AI analysis with citations, review and approval | Done |
 | 4 | Tasks, evidence, calendar, notifications, dashboard | Planned |
 | 5 | Reports, hardening, Azure deploy, pilot | Planned |
 
