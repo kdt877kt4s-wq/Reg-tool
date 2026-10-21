@@ -50,7 +50,8 @@ it('produces a cited analysis and shows where each citation is', function () {
 
     $cited = $data['output']['what_changed'][0]['citations'][0];
     expect($data['citations'][(string) $cited]['page_start'])->toBeGreaterThanOrEqual(62323)
-        ->and($data['citations'][(string) $cited]['excerpt'])->toContain('0.9986');
+        ->and($data['citations'][(string) $cited]['heading_path'])->toContain('Summary of Errors')
+        ->and($data['citations'][(string) $cited]['excerpt'])->not->toBeEmpty();
 
     // What the model was given: delimited passages, the profile, and the data-not-instructions rule.
     $call = $model->calls[0];

@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { inputClass } from "@/components/ui/field";
 import { buttonClass } from "@/components/ui/button";
-import { apiRequest, type PassageList, type RegulatoryDocumentDetail } from "@/lib/api";
+import { apiRequest, getTaxonomy, type AnalysisResponse, type Assessment, type PassageList, type RegulatoryDocumentDetail } from "@/lib/api";
+import { can, requireOrganization } from "@/lib/auth";
+import { AnalysisPanel } from "./analysis-panel";
 import { commentDeadlineNote, formatDate, formatDateTime, snippetParts } from "@/lib/format";
 import { primaryAgency } from "../document-row";
 
@@ -30,20 +32,25 @@ export default async function DocumentPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; around?: string }>;
 }) {
   const { id } = await params;
-  const { q, page } = await searchParams;
+  const { q, page, around } = await searchParams;
   const documentId = Number(id);
   if (!Number.isInteger(documentId) || documentId < 1) notFound();
 
   const passageQuery = new URLSearchParams();
   if (q) passageQuery.set("q", q);
   if (page) passageQuery.set("page", page);
+  if (around && !q && !page) passageQuery.set("around", around);
 
-  const [res, passages] = await Promise.all([
+  const [res, passages, { org }, analysis, assessment, taxonomy] = await Promise.all([
     apiRequest<{ data: RegulatoryDocumentDetail }>(`/regulatory-documents/${documentId}`),
     apiRequest<PassageList>(`/regulatory-documents/${documentId}/passages?${passageQuery}`),
+    requireOrganization(),
+    apiRequest<AnalysisResponse>(`/regulatory-documents/${documentId}/analysis`),
+    apiRequest<{ data: Assessment | null }>(`/regulatory-documents/${documentId}/assessment`),
+    getTaxonomy(),
   ]);
   if (!res.ok) {
     if (res.error.status === 404) notFound();
@@ -226,6 +233,18 @@ export default async function DocumentPage({
             ))}
           </ol>
         </section>
+      )}
+
+      {analysis.ok && (
+        <AnalysisPanel
+          documentId={doc.id}
+          textAvailable={doc.text_status === "available"}
+          analysis={analysis.data}
+          assessment={assessment.ok ? assessment.data.data : null}
+          canEdit={can(org, "assessments.edit")}
+          canApprove={can(org, "assessments.approve")}
+          functions={taxonomy.filter((t) => t.kind === "function")}
+        />
       )}
 
       <section aria-labelledby="text-heading" className="mt-12">

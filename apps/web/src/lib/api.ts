@@ -196,6 +196,96 @@ export type Facets = {
   types: { type: string; label: string; documents: number }[];
 };
 
+export type Claim = {
+  text: string;
+  basis: "regulatory_text" | "ai_interpretation";
+  citations: number[];
+  quote?: string;
+};
+
+export type AnalysisOutput = {
+  what_changed: Claim[];
+  why_it_matters: Claim[];
+  applicability: { level: "likely" | "possible" | "unlikely"; reasons: Claim[]; missing_facts: string[] };
+  affected_functions: string[];
+  operational_impacts: Claim[];
+  policies_to_review: Claim[];
+  deadlines: { date: string; label: string; citations: number[]; in_source_record: boolean }[];
+  suggested_actions: { title: string; description: string; priority: "high" | "medium" | "low"; citations: number[] }[];
+  model_confidence: string;
+  confidence_reason: string;
+};
+
+export type CitationInfo = {
+  id: number;
+  ordinal: number;
+  heading_path: string | null;
+  page_start: number | null;
+  page_end: number | null;
+  excerpt: string;
+};
+
+export type Analysis = {
+  id: number;
+  status: "queued" | "running" | "completed" | "failed";
+  error: string | null;
+  model: string | null;
+  prompt_version: string;
+  profile_version: number;
+  confidence: "high" | "medium" | "low" | null;
+  output: AnalysisOutput | null;
+  citations: Record<string, CitationInfo>;
+  removed: { section: string; text: string; reason: string }[];
+  passages_sent: number | null;
+  created_at: string;
+  completed_at: string | null;
+  has_assessment: boolean;
+};
+
+export type AnalysisResponse = { data: Analysis | null; can_run: boolean; configured: boolean };
+
+export type AssessmentAction = {
+  id: number;
+  title: string;
+  description: string | null;
+  priority: "high" | "medium" | "low";
+  state: "proposed" | "accepted" | "dismissed";
+  origin: "ai" | "person";
+  citation_passage_ids: number[];
+};
+
+export type Assessment = {
+  id: number;
+  status: "draft" | "approved";
+  decision: "applicable" | "not_applicable" | "monitor" | null;
+  rationale: string | null;
+  affected_functions: string[];
+  analysis_id: number | null;
+  document_version: number;
+  source_changed: boolean;
+  approved_by: string | null;
+  approved_at: string | null;
+  updated_by: string | null;
+  updated_at: string;
+  actions: AssessmentAction[];
+};
+
+export type QueueRow = {
+  group: "awaiting_review" | "approved" | "in_progress" | "failed";
+  document: {
+    id: number;
+    document_number: string;
+    title: string;
+    type_label: string;
+    publication_date: string;
+    effective_date: string | null;
+    comments_close_date: string | null;
+  };
+  analysis: { status: Analysis["status"]; confidence: Analysis["confidence"]; applicability: string | null } | null;
+  assessment: { status: Assessment["status"]; decision: Assessment["decision"]; source_changed: boolean; approved_at: string | null } | null;
+  updated_at: string;
+};
+
 export type Health = {
   service: string;
   version: string;

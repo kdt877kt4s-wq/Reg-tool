@@ -1,5 +1,6 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { apiRequest, getMe, type Me, type OrganizationInfo } from "./api";
 
 /**
@@ -13,7 +14,8 @@ export async function requireAccount(): Promise<Me> {
   return me;
 }
 
-export async function requireOrganization(): Promise<{ me: Me; org: OrganizationInfo }> {
+/** Cached per request: the layout and the page share one lookup. */
+export const requireOrganization = cache(async (): Promise<{ me: Me; org: OrganizationInfo }> => {
   const me = await requireAccount();
   if (me.mfa_enrollment_required) redirect("/security/two-factor");
   if (me.memberships.length === 0) redirect("/no-organization");
@@ -25,7 +27,7 @@ export async function requireOrganization(): Promise<{ me: Me; org: Organization
     throw new Error(res.error.message);
   }
   return { me, org: res.data };
-}
+});
 
 export function can(org: OrganizationInfo, permission: string): boolean {
   return org.permissions.includes(permission);

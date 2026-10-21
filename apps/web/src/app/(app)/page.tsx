@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { buttonClass } from "@/components/ui/button";
 import { SourceStatusLine } from "@/components/source-status";
-import { api, apiRequest, type DocumentList, type Health, type Profile, type SourceStatus } from "@/lib/api";
+import { api, apiRequest, type DocumentList, type Health, type Profile, type QueueRow, type SourceStatus } from "@/lib/api";
 import { isoDateDaysAgo } from "@/lib/format";
 import { DocumentRow } from "./regulations/document-row";
 import { can, requireOrganization } from "@/lib/auth";
@@ -10,14 +10,17 @@ export const dynamic = "force-dynamic";
 
 export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ profile?: string }> }) {
   const since = isoDateDaysAgo(30);
-  const [{ me, org }, health, profile, params, sources, recent] = await Promise.all([
+  const [{ me, org }, health, profile, params, sources, recent, queue] = await Promise.all([
     requireOrganization(),
     api.health(),
     apiRequest<{ profile: Profile }>("/organization/profile"),
     searchParams,
     apiRequest<{ data: SourceStatus[] }>("/sources"),
     apiRequest<DocumentList>(`/regulatory-documents?relevance=profile&from=${since}&limit=5`),
+    apiRequest<{ data: QueueRow[] }>("/assessments"),
   ]);
+  const awaiting = queue.ok ? queue.data.data.filter((r) => r.group === "awaiting_review").length : 0;
+  const changed = queue.ok ? queue.data.data.filter((r) => r.assessment?.source_changed).length : 0;
 
   const firstName = me.user.name.split(" ")[0];
   const p = profile.ok ? profile.data.profile : null;
@@ -31,6 +34,29 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
         <p role="status" className="mt-6 border-l-2 border-signal pl-3 text-sm">
           Regulatory profile saved. RuleRadar will use it to screen new regulations once monitoring starts.
         </p>
+      )}
+
+      {(awaiting > 0 || changed > 0) && (
+        <section aria-labelledby="review-heading" className="mt-8 rounded-md border border-rule p-5">
+          <h2 id="review-heading" className="text-base font-semibold">
+            Waiting for review
+          </h2>
+          <ul className="mt-2 space-y-1 text-sm">
+            {awaiting > 0 && (
+              <li>
+                {awaiting} {awaiting === 1 ? "publication has" : "publications have"} an analysis or draft waiting for a decision.
+              </li>
+            )}
+            {changed > 0 && (
+              <li className="text-caution">
+                {changed} approved {changed === 1 ? "assessment needs" : "assessments need"} another look because the source changed.
+              </li>
+            )}
+          </ul>
+          <Link href="/assessments" className="mt-3 inline-block text-sm text-signal underline-offset-4 hover:underline">
+            Open impact assessments
+          </Link>
+        </section>
       )}
 
       <section aria-labelledby="profile-heading" className="mt-10">
