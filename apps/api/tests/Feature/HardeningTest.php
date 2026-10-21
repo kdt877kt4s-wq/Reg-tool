@@ -35,3 +35,17 @@ it('prunes old read notifications and keeps unread and recent ones', function ()
 
     asSystem(fn () => expect(UserNotification::withoutGlobalScopes()->orderBy('dedupe_key')->pluck('dedupe_key')->all())->toBe(['new-read', 'old-unread']));
 });
+
+it('rate-limits signed-in people separately, not by the web server\'s address', function () {
+    $org = createOrganization();
+    $a = addMember($org, Role::Employee);
+    $b = addMember($org, Role::Employee);
+
+    $key = fn ($user) => 'user:'.$user->id;
+    $limiter = app(Illuminate\Cache\RateLimiter::class);
+    actingIn($a, $org)->getJson('/api/v1/organization')->assertOk();
+    actingIn($b, $org)->getJson('/api/v1/organization')->assertOk();
+
+    expect($limiter->attempts(md5('api'.$key($a))))->toBe(1)
+        ->and($limiter->attempts(md5('api'.$key($b))))->toBe(1);
+});

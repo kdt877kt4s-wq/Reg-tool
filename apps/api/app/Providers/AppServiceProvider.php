@@ -76,13 +76,27 @@ class AppServiceProvider extends ServiceProvider
         ResetPassword::createUrlUsing(fn ($user, string $token) => rtrim((string) config('ruleradar.frontend_url'), '/')
             .'/reset-password?'.http_build_query(['token' => $token, 'email' => $user->email]));
 
-        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->id ?: $request->ip()));
+        // Keyed by the signed-in person (from the bearer token): every request
+        // arrives from the web app's servers, so IP alone would make all users
+        // share one budget. Each page view makes several API calls.
+        RateLimiter::for('api', function (Request $request) {
+            $userId = $request->user('sanctum')?->getAuthIdentifier();
+
+            return $userId
+                ? Limit::perMinute(600)->by('user:'.$userId)
+                : Limit::perMinute(300)->by('ip:'.$request->ip());
+        });
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(strtolower((string) $request->input('email')).'|'.$request->ip()));
         RateLimiter::for('mfa', fn (Request $request) => Limit::perMinute(5)->by((string) ($request->input('challenge') ?: $request->user()?->id).'|'.$request->ip()));
         // AI analyses cost money: a per-organization ceiling.
         RateLimiter::for('ai', fn (Request $request) => Limit::perHour(60)->by('org:'.$request->header('X-Organization-Id', (string) $request->user()?->id)));
         // Outbound: fetching publication text from government sources.
         RateLimiter::for('source-text', fn () => Limit::perMinute(60));
-        RateLimiter::for('public-forms', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+        // Registration, password reset, invitations: per email (or link) and
+        // address, so one person's retries do not block everyone else.
+        RateLimiter::for('public-forms', fn (Request $request) => [
+            Limit::perMinute(10)->by('form:'.strtolower((string) ($request->input('email') ?: $request->route('token'))).'|'.$request->ip()),
+            Limit::perMinute(120)->by('form-ip:'.$request->ip()),
+        ]);
     }
 }

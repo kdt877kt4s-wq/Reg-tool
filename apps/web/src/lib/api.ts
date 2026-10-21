@@ -511,8 +511,11 @@ export type Health = {
 
 /* ---------- Cached per request ---------- */
 
+/** The signed-in account, with the reason when it could not be loaded. */
+export const getMeResult = cache(async (): Promise<ApiResult<Me>> => apiRequest<Me>("/auth/me", { organizationId: null }));
+
 export const getMe = cache(async (): Promise<Me | null> => {
-  const res = await apiRequest<Me>("/auth/me", { organizationId: null });
+  const res = await getMeResult();
   return res.ok ? res.data : null;
 });
 

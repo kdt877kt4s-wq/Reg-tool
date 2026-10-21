@@ -12,7 +12,8 @@ COPY . .
 RUN composer dump-autoload --optimize --no-dev --no-scripts
 
 FROM dunglas/frankenphp:1-php8.3-bookworm
-RUN install-php-extensions pdo_pgsql pgsql redis-6.2.0 intl zip opcache bcmath pcntl \
+# phpredis is built from its GitHub release so the build does not depend on PECL.
+RUN install-php-extensions pdo_pgsql pgsql phpredis/phpredis@6.2.0 intl zip opcache bcmath pcntl \
     && cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && { echo 'expose_php=Off'; echo 'upload_max_filesize=26M'; echo 'post_max_size=28M'; echo 'memory_limit=256M'; \
          echo 'opcache.enable=1'; echo 'opcache.validate_timestamps=0'; } > "$PHP_INI_DIR/conf.d/ruleradar.ini"

@@ -1,7 +1,7 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { apiRequest, getMe, type Me, type OrganizationInfo } from "./api";
+import { apiRequest, getMeResult, type Me, type OrganizationInfo } from "./api";
 
 /**
  * Guard for signed-in pages. Sends people where they need to be:
@@ -9,9 +9,12 @@ import { apiRequest, getMe, type Me, type OrganizationInfo } from "./api";
  * explanation. Authorization itself is enforced by the API.
  */
 export async function requireAccount(): Promise<Me> {
-  const me = await getMe();
-  if (!me) redirect("/login");
-  return me;
+  const res = await getMeResult();
+  if (res.ok) return res.data;
+  // Only a rejected session means "sign in again". An unreachable or
+  // overloaded API shows the error page instead of logging people out.
+  if (res.error.status === 401) redirect("/login");
+  throw new Error(res.error.message);
 }
 
 /** Cached per request: the layout and the page share one lookup. */
