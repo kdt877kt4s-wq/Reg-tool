@@ -30,3 +30,41 @@ export function pageLabel(start: number | null, end: number | null): string | nu
   if (!start) return null;
   return end && end !== start ? `pages ${start}–${end}` : `page ${start}`;
 }
+
+export const TASK_STATUS_LABELS = {
+  open: "Open",
+  in_progress: "In progress",
+  submitted: "Waiting for review",
+  returned: "Returned",
+  done: "Done",
+  cancelled: "Cancelled",
+} as const;
+
+export const DEADLINE_KIND_LABELS = {
+  effective: "Effective date",
+  comments_close: "Comments close",
+  task_due: "Task due",
+} as const;
+
+/** "1.2 MB" for evidence file sizes. */
+export function fileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+const EVENT_LABELS: Record<string, string> = {
+  created: "Created",
+  assigned: "Assigned",
+  edited: "Edited",
+  started: "Started",
+  evidence_added: "Added evidence",
+  submitted: "Submitted for review",
+  accepted: "Accepted as done",
+  returned: "Returned",
+  cancelled: "Cancelled",
+};
+
+export function eventLabel(type: string): string {
+  return EVENT_LABELS[type] ?? type;
+}

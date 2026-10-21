@@ -56,6 +56,27 @@ export async function apiRequest<T>(path: string, options: Options = {}): Promis
   return { ok: true, status: res.status, data: json as T };
 }
 
+/**
+ * Raw request for bodies apiRequest does not handle (file uploads and
+ * downloads). Adds the token and organization; returns the Response.
+ */
+export async function apiFetch(path: string, init: { method?: string; body?: BodyInit; timeoutMs?: number } = {}): Promise<Response | null> {
+  const token = await getSessionToken();
+  const organizationId = await getActiveOrganizationId();
+  if (!token || organizationId === null) return null;
+  try {
+    return await fetch(apiUrl(path), {
+      method: init.method ?? "GET",
+      headers: { Accept: "application/json", Authorization: `Bearer ${token}`, "X-Organization-Id": String(organizationId) },
+      body: init.body,
+      cache: "no-store",
+      signal: AbortSignal.timeout(init.timeoutMs ?? 60_000),
+    });
+  } catch {
+    return null;
+  }
+}
+
 /* ---------- Shapes returned by the API ---------- */
 
 export type Me = {
@@ -284,6 +305,88 @@ export type QueueRow = {
   analysis: { status: Analysis["status"]; confidence: Analysis["confidence"]; applicability: string | null } | null;
   assessment: { status: Assessment["status"]; decision: Assessment["decision"]; source_changed: boolean; approved_at: string | null } | null;
   updated_at: string;
+};
+
+export type TaskStatus = "open" | "in_progress" | "submitted" | "returned" | "done" | "cancelled";
+export type TaskAction = "edit" | "cancel" | "start" | "add_evidence" | "submit" | "accept" | "return";
+
+export type TaskSummary = {
+  id: number;
+  title: string;
+  status: TaskStatus;
+  priority: "high" | "medium" | "low";
+  owner: { id: number; name: string } | null;
+  department: { id: number; name: string } | null;
+  due_date: string | null;
+  due_date_type: "official" | "internal" | null;
+  overdue: boolean;
+  document: { id: number; document_number: string; title: string } | null;
+  updated_at: string;
+};
+
+export type Evidence = {
+  id: number;
+  note: string | null;
+  submitted_by: string | null;
+  created_at: string;
+  file: { id: number; filename: string; mime: string; size: number; sha256: string; scan_status: "not_scanned" | "clean" | "infected" } | null;
+};
+
+export type TaskDetail = TaskSummary & {
+  description: string | null;
+  due_date_basis: string | null;
+  status_note: string | null;
+  assessment_id: number | null;
+  from_action: boolean;
+  citations: { id: number; heading_path: string | null; page_start: number | null; page_end: number | null }[];
+  document_citation: string | null;
+  submitted_at: string | null;
+  completed_at: string | null;
+  allowed_actions: TaskAction[];
+  evidence: Evidence[];
+  events: { type: string; actor: string | null; details: Record<string, unknown> | null; created_at: string }[];
+};
+
+export type Assignees = {
+  data: { id: number; name: string; role_label: string; department: { id: number; name: string } | null }[];
+  departments: { id: number; name: string }[];
+};
+
+export type CalendarEntry = {
+  id: string;
+  date: string;
+  kind: "effective" | "comments_close" | "task_due";
+  deadline_type: "official" | "internal";
+  title: string;
+  basis: string | null;
+  document?: { id: number; document_number: string; title: string; type: string };
+  assessed?: boolean;
+  decision?: string | null;
+  profile_match?: boolean;
+  task?: { id: number; status: TaskStatus; priority: string; owner: string | null; overdue: boolean };
+};
+
+export type AppNotification = {
+  id: number;
+  kind: string;
+  title: string;
+  body: string | null;
+  path: string | null;
+  read_at: string | null;
+  emailed: boolean;
+  created_at: string;
+};
+
+export type NotificationPreference = { kind: string; label: string; email: boolean; in_app: boolean };
+
+export type DashboardSummary = {
+  my_tasks: { active: number; overdue: number; due_this_week: number; returned: number };
+  to_review: number;
+  tasks: { scope: "organization" | "visible"; active: number; overdue: number; unassigned: number; done_30d: number };
+  assessments: { awaiting_review: number; in_progress: number; approved: number; source_changed: number };
+  deadlines: CalendarEntry[];
+  weekly_publications: { week: string; total: number; matches: number }[];
+  profile_configured: boolean;
 };
 
 export type Health = {

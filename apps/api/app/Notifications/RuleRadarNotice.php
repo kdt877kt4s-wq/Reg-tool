@@ -37,6 +37,6 @@ class RuleRadarNotice extends Notification
             $mail->action('Open in RuleRadar', $this->url);
         }
 
-        return $mail->line('You can turn off emails like this in Organization settings.');
+        return $mail->line('You can turn off emails like this under Organization settings, Your email notifications.');
     }
 }

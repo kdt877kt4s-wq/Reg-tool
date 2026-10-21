@@ -49,15 +49,19 @@ export async function saveAssessmentAction(
   if (!saved.ok) return formError(saved.error);
 
   let assessment = saved.data.data;
+  let created = 0;
   if (approve) {
-    const approved = await apiRequest<{ data: Assessment }>(`/regulatory-documents/${documentId}/assessment/approve`, { method: "POST" });
+    const approved = await apiRequest<{ data: Assessment; tasks_created: number }>(`/regulatory-documents/${documentId}/assessment/approve`, { method: "POST" });
     if (!approved.ok) return { ...formError(approved.error), assessment };
     assessment = approved.data.data;
+    created = approved.data.tasks_created;
   }
 
   revalidatePath(`/regulations/${documentId}`);
   revalidatePath("/assessments");
-  return { ok: true, message: approve ? "Assessment approved." : "Draft saved.", assessment };
+  revalidatePath("/tasks");
+  const tasks = created === 0 ? "" : created === 1 ? " 1 task created; assign it in Compliance tasks." : ` ${created} tasks created; assign them in Compliance tasks.`;
+  return { ok: true, message: approve ? `Assessment approved.${tasks}` : "Draft saved.", assessment };
 }
 
 export async function reopenAssessmentAction(_: FormState, form: FormData): Promise<FormState> {

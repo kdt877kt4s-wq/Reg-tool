@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { revokeInvitationAction } from "@/app/(app)/actions";
-import { apiRequest, type Department, type Invitation, type Member } from "@/lib/api";
+import { apiRequest, type Department, type Invitation, type Member, type NotificationPreference } from "@/lib/api";
 import { can, requireOrganization } from "@/lib/auth";
 import { ROLES } from "@/lib/roles";
 import { CreateDepartmentForm, InviteForm, MemberRow, RenameForm } from "./forms";
+import { NotificationPreferencesForm } from "./notification-preferences";
 
 export const metadata = { title: "Organization settings" };
 
@@ -12,10 +13,11 @@ export default async function SettingsPage() {
   const canViewMembers = can(org, "members.view");
   const canManage = can(org, "members.manage");
 
-  const [members, invitations, departments] = await Promise.all([
+  const [members, invitations, departments, preferences] = await Promise.all([
     canViewMembers ? apiRequest<{ data: Member[] }>("/organization/members") : null,
     canViewMembers ? apiRequest<{ data: Invitation[] }>("/organization/invitations") : null,
     apiRequest<{ data: Department[] }>("/departments"),
+    apiRequest<{ data: NotificationPreference[] }>("/notification-preferences"),
   ]);
   const departmentList = departments.ok ? departments.data.data : [];
 
@@ -142,6 +144,17 @@ export default async function SettingsPage() {
             Manage two-factor login
           </Link>
         </p>
+      </section>
+
+      <section aria-labelledby="notifications-heading">
+        <h2 id="notifications-heading" className="scroll-mt-8 text-lg font-semibold">
+          Your email notifications
+        </h2>
+        {preferences.ok ? (
+          <NotificationPreferencesForm preferences={preferences.data.data} />
+        ) : (
+          <p role="alert" className="mt-2 text-sm">{preferences.error.message}</p>
+        )}
       </section>
     </div>
   );

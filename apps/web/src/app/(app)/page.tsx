@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { buttonClass } from "@/components/ui/button";
 import { SourceStatusLine } from "@/components/source-status";
-import { api, apiRequest, type DocumentList, type Health, type Profile, type QueueRow, type SourceStatus } from "@/lib/api";
-import { isoDateDaysAgo } from "@/lib/format";
+import { WeeklyChart } from "@/components/weekly-chart";
+import { api, apiRequest, type DashboardSummary, type DocumentList, type Health, type Profile, type QueueRow, type SourceStatus } from "@/lib/api";
+import { formatDate, isoDateDaysAgo } from "@/lib/format";
+import { DEADLINE_KIND_LABELS } from "@/lib/labels";
 import { DocumentRow } from "./regulations/document-row";
 import { can, requireOrganization } from "@/lib/auth";
 
@@ -10,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function OverviewPage({ searchParams }: { searchParams: Promise<{ profile?: string }> }) {
   const since = isoDateDaysAgo(30);
-  const [{ me, org }, health, profile, params, sources, recent, queue] = await Promise.all([
+  const [{ me, org }, health, profile, params, sources, recent, queue, summary] = await Promise.all([
     requireOrganization(),
     api.health(),
     apiRequest<{ profile: Profile }>("/organization/profile"),
@@ -18,7 +20,9 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
     apiRequest<{ data: SourceStatus[] }>("/sources"),
     apiRequest<DocumentList>(`/regulatory-documents?relevance=profile&from=${since}&limit=5`),
     apiRequest<{ data: QueueRow[] }>("/assessments"),
+    apiRequest<{ data: DashboardSummary }>("/dashboard/summary"),
   ]);
+  const d = summary.ok ? summary.data.data : null;
   const awaiting = queue.ok ? queue.data.data.filter((r) => r.group === "awaiting_review").length : 0;
   const changed = queue.ok ? queue.data.data.filter((r) => r.assessment?.source_changed).length : 0;
 
@@ -34,6 +38,73 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
         <p role="status" className="mt-6 border-l-2 border-signal pl-3 text-sm">
           Regulatory profile saved. RuleRadar will use it to screen new regulations once monitoring starts.
         </p>
+      )}
+
+      {d && (
+        <section aria-labelledby="work-heading" className="mt-8">
+          <h2 id="work-heading" className="sr-only">
+            Your work
+          </h2>
+          <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-rule bg-rule sm:grid-cols-4">
+            <Stat label="Assigned to you" value={d.my_tasks.active} href="/tasks?view=mine" />
+            <Stat label="Yours overdue" value={d.my_tasks.overdue} href="/tasks?view=mine&filter=overdue" tone={d.my_tasks.overdue > 0 ? "caution" : undefined} />
+            <Stat label="Waiting for your review" value={d.to_review} href="/tasks?view=visible&filter=submitted" />
+            <Stat
+              label={d.tasks.scope === "organization" ? "Organization tasks overdue" : "Overdue you can see"}
+              value={d.tasks.overdue}
+              href="/tasks?view=visible&filter=overdue"
+              tone={d.tasks.overdue > 0 ? "caution" : undefined}
+            />
+          </dl>
+          {d.my_tasks.returned > 0 && (
+            <p className="mt-3 border-l-2 border-caution pl-3 text-sm">
+              {d.my_tasks.returned} of your tasks {d.my_tasks.returned === 1 ? "was" : "were"} returned with a reason.{" "}
+              <Link href="/tasks?view=mine" className="text-signal underline-offset-4 hover:underline">
+                Open
+              </Link>
+            </p>
+          )}
+          {d.tasks.scope === "organization" && d.tasks.unassigned > 0 && (
+            <p className="mt-3 text-sm">
+              {d.tasks.unassigned} active {d.tasks.unassigned === 1 ? "task has" : "tasks have"} no owner.{" "}
+              <Link href="/tasks?view=visible&filter=unassigned" className="text-signal underline-offset-4 hover:underline">
+                Assign
+              </Link>
+            </p>
+          )}
+        </section>
+      )}
+
+      {d && (
+        <section aria-labelledby="deadlines-heading" className="mt-10">
+          <h2 id="deadlines-heading" className="text-lg font-semibold">
+            Next 30 days
+          </h2>
+          {d.deadlines.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">No published dates or task due dates in the next 30 days.</p>
+          ) : (
+            <ol className="mt-3 divide-y divide-rule border-y border-rule">
+              {d.deadlines.map((e) => (
+                <li key={e.id} className="grid gap-1 py-3 text-sm sm:grid-cols-[7rem_9rem_1fr] sm:gap-4">
+                  <span className="font-medium tabular-nums">{formatDate(e.date)}</span>
+                  <span>
+                    <span className={e.deadline_type === "official" ? "rounded-sm bg-ink px-1.5 py-0.5 text-[11px] font-medium text-white" : "rounded-sm border border-ink/40 px-1.5 py-0.5 text-[11px] font-medium"}>
+                      {DEADLINE_KIND_LABELS[e.kind]}
+                    </span>
+                  </span>
+                  <Link href={e.task ? `/tasks/${e.task.id}` : `/regulations/${e.document!.id}`} className="min-w-0 truncate hover:text-signal hover:underline hover:underline-offset-4">
+                    {e.title}
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          )}
+          <p className="mt-3 text-sm">
+            <Link href="/calendar" className="text-signal underline-offset-4 hover:underline">
+              Open the regulatory calendar
+            </Link>
+          </p>
+        </section>
       )}
 
       {(awaiting > 0 || changed > 0) && (
@@ -99,6 +170,12 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
           New for your profile in the last 30 days
         </h2>
         <div className="mt-2">{sources.ok && <SourceStatusLine sources={sources.data.data} />}</div>
+        {d && d.weekly_publications.some((w) => w.total > 0) && (
+          <>
+            <h3 className="mt-6 text-sm font-semibold">Federal Register publications retrieved per week, last 12 weeks</h3>
+            <WeeklyChart weeks={d.weekly_publications} showMatches={d.profile_configured} />
+          </>
+        )}
         {recent.ok && recent.data.meta.profile_filter_unavailable ? (
           <p className="mt-4 max-w-[62ch] text-sm text-muted">
             Select federal programs in the regulatory profile and RuleRadar will list publications that amend the
@@ -141,6 +218,19 @@ export default async function OverviewPage({ searchParams }: { searchParams: Pro
           </p>
         )}
       </section>
+    </div>
+  );
+}
+
+function Stat({ label, value, href, tone }: { label: string; value: number; href: string; tone?: "caution" }) {
+  return (
+    <div className="bg-paper p-4">
+      <dt className="text-xs text-muted">{label}</dt>
+      <dd className={tone === "caution" ? "mt-1 text-2xl font-semibold tabular-nums text-caution" : "mt-1 text-2xl font-semibold tabular-nums"}>
+        <Link href={href} className="hover:underline hover:underline-offset-4">
+          {value}
+        </Link>
+      </dd>
     </div>
   );
 }

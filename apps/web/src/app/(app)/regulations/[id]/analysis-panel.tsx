@@ -256,7 +256,11 @@ function AssessmentSummary({ assessment, documentId, canApprove }: { assessment:
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-xs text-muted">Assigning these as tasks arrives in the next release.</p>
+          <p className="mt-2 text-sm">
+            <Link href={`/tasks?view=visible&document=${documentId}`} className="text-signal underline-offset-4 hover:underline">
+              Open the tasks created from these actions
+            </Link>
+          </p>
         </>
       )}
       {canApprove && (

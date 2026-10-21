@@ -9,10 +9,13 @@ export function AppShell({
   children,
   me,
   org,
+  unread,
 }: {
   children: React.ReactNode;
   me: Me;
   org: OrganizationInfo;
+  /** Unread notifications; null when the count could not be loaded. */
+  unread: number | null;
 }) {
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[17rem_1fr]">
@@ -29,6 +32,20 @@ export function AppShell({
             RuleRadar
           </Link>
           <OrganizationPicker me={me} currentId={org.organization.id} currentName={org.organization.name} />
+          <Link
+            href="/notifications"
+            className="mt-4 flex items-center justify-between rounded-md border border-white/15 px-3 py-1.5 text-sm text-white hover:bg-white/10"
+          >
+            <span>Notifications</span>
+            {unread !== null && unread > 0 ? (
+              <span className="rounded-full bg-white px-2 text-xs font-semibold tabular-nums text-ink">
+                {unread > 99 ? "99+" : unread}
+                <span className="sr-only"> unread</span>
+              </span>
+            ) : (
+              <span className="text-xs text-rail-text/60">None new</span>
+            )}
+          </Link>
         </div>
 
         <nav aria-label="Primary" className="flex-1 overflow-y-auto px-3 pb-6">

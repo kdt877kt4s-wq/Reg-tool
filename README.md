@@ -80,6 +80,26 @@ To try it against the real Claude before deployment, add `ANTHROPIC_API_KEY` (an
 analyzes a real publication in a throwaway CI database and reports what the validator kept and
 removed.
 
+## Tasks, evidence and notifications
+
+Approving an impact assessment turns each accepted action into a task. When the publication
+has a published effective date in the future, it becomes the task's **official** due date, with
+its source recorded; otherwise the task has no due date until someone sets one (marked
+**internal** unless they cite the rule that sets it). Tasks move open, in progress, submitted,
+returned or done; submitting needs at least one piece of evidence, and the person who submitted
+cannot accept their own work. Every change is kept in the task history and the audit log.
+
+Evidence files go to a private disk (`EVIDENCE_DISK`, local in development), limited to 25 MB
+and an allowlist of document, image, email and archive types, with a SHA-256 recorded. Files
+are downloaded only through the API by people who can see the task. Set
+`EVIDENCE_REQUIRE_SCAN=true` to hold files back until a scanner marks them clean (Stage 5 wires
+Microsoft Defender for Storage); until then the interface labels files "Not scanned".
+
+Notifications appear in the app and, unless a person turns a kind off, by email. A daily job
+(`php artisan ruleradar:daily-notifications`, scheduled 07:00 Central) sends due-soon and
+overdue reminders, a digest of new publications that match the profile, and alerts when a
+document changes after its assessment was approved. Each is sent once.
+
 ## Tests
 
 ```bash
@@ -97,7 +117,7 @@ CI runs both suites, a Bicep compile and dependency audits on every push and pul
 | 1 | Tenancy, auth, MFA, roles, audit log, profile wizard | Done |
 | 2 | Federal Register ingestion and Regulatory Intelligence | Done |
 | 3 | AI analysis with citations, review and approval | Done |
-| 4 | Tasks, evidence, calendar, notifications, dashboard | Planned |
+| 4 | Tasks, evidence, calendar, notifications, dashboard | Done |
 | 5 | Reports, hardening, Azure deploy, pilot | Planned |
 
 ## Security model in brief
