@@ -389,6 +389,99 @@ export type DashboardSummary = {
   profile_configured: boolean;
 };
 
+export type ReportMeta = { organization: string | null; generated_at: string; generated_by: string | null; notice: string };
+
+export type ActivityRow = {
+  document_id: number;
+  document_number: string;
+  citation: string | null;
+  type: string;
+  title: string;
+  agencies: string;
+  publication_date: string;
+  effective_date: string | null;
+  comments_close_date: string | null;
+  cfr_parts: string;
+  profile_match: boolean;
+  ai_applicability: "likely" | "possible" | "unlikely" | null;
+  ai_confidence: "high" | "medium" | "low" | null;
+  assessment_status: "draft" | "approved" | null;
+  decision: "applicable" | "not_applicable" | "monitor" | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  source_changed_since_approval: boolean | null;
+  tasks: number;
+  tasks_done: number;
+  source_url: string | null;
+};
+
+export type ActivityReport = {
+  meta: ReportMeta & { from: string; to: string; scope: "profile" | "all"; profile_cfr_parts: string[]; truncated: boolean };
+  summary: { publications: number; profile_matches: number; analyzed: number; approved: number; applies: number; source_changed: number };
+  data: ActivityRow[];
+};
+
+export type TaskReportRow = {
+  task_id: number;
+  title: string;
+  status: TaskStatus;
+  priority: "high" | "medium" | "low";
+  owner: string | null;
+  department: string | null;
+  due_date: string | null;
+  deadline_type: "official" | "internal" | null;
+  deadline_source: string | null;
+  overdue: boolean;
+  evidence_items: number;
+  times_returned: number;
+  submitted_at: string | null;
+  completed_at: string | null;
+  accepted_by: string | null;
+  source_document: string | null;
+  source_title: string | null;
+  from_assessment_action: boolean;
+};
+
+export type TaskReport = {
+  meta: ReportMeta & { status: string };
+  summary: { tasks: number; active: number; overdue: number; done: number; done_without_evidence: number; unassigned: number };
+  data: TaskReportRow[];
+};
+
+export type EvidencePack = {
+  meta: ReportMeta;
+  document: {
+    id: number;
+    document_number: string;
+    citation: string | null;
+    title: string;
+    type: string;
+    publication_date: string;
+    effective_date: string | null;
+    comments_close_date: string | null;
+    current_version: number;
+    html_url: string | null;
+    official_pdf_url: string | null;
+  };
+  assessment: Assessment;
+  analysis: Analysis | null;
+  tasks: {
+    id: number;
+    title: string;
+    status: TaskStatus;
+    owner: string | null;
+    department: string | null;
+    due_date: string | null;
+    due_date_type: "official" | "internal" | null;
+    due_date_basis: string | null;
+    completed_at: string | null;
+    evidence: { note: string | null; submitted_by: string | null; created_at: string; file: { filename: string; size: number; sha256: string; scan_status: string } | null }[];
+    history: { type: string; actor: string | null; created_at: string }[];
+  }[];
+  audit_trail: { id: number; action: string; actor: string | null; created_at: string; hash: string }[];
+  audit_chain: { valid: boolean; checked: number; broken_at_id: number | null };
+};
+
 export type Health = {
   service: string;
   version: string;

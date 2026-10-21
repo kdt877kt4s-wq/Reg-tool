@@ -80,7 +80,7 @@ test("compliance MVP: profile to cited analysis to approved, evidenced task", as
   // 2. ...and invites a compliance officer.
   await a.goto("/settings");
   await a.getByLabel("Email", { exact: true }).fill(officer.email);
-  await a.getByLabel("Role").selectOption({ label: "Compliance officer" });
+  await a.getByLabel("Role", { exact: true }).selectOption({ label: "Compliance officer" });
   await a.getByRole("button", { name: "Send invitation" }).click();
   await expect(a.getByText(`Invitation sent to ${officer.email}.`)).toBeVisible();
 
@@ -109,6 +109,7 @@ test("compliance MVP: profile to cited analysis to approved, evidenced task", as
   await o.goto("/regulations?q=Inpatient%20Psychiatric");
   await o.getByRole("link", { name: DOC_TITLE }).first().click();
   await expect(o.getByRole("heading", { level: 1 })).toContainText("Inpatient Psychiatric");
+  const documentId = /\/regulations\/(\d+)/.exec(o.url())![1];
   await o.getByRole("button", { name: "Analyze impact for my organization" }).click();
   await expect(o.getByText("Test output, not a real analysis")).toBeVisible({ timeout: 60_000 });
   await expect(o.getByText("AI interpretation").first()).toBeVisible();
@@ -164,6 +165,16 @@ test("compliance MVP: profile to cited analysis to approved, evidenced task", as
   await expect(o.getByText("Accepted as done.")).toBeVisible();
   await expect(o.getByText("Done", { exact: true }).first()).toBeVisible();
   await expect(o.getByText("Accepted as done").last()).toBeVisible();
+
+  // 10. The evidence pack ties it together and the audit log checks out.
+  await o.goto(`/reports/evidence/${documentId}`);
+  await expect(o.getByRole("heading", { name: "Evidence pack" })).toBeVisible();
+  await expect(o.getByText(/The organization's audit log is intact/)).toBeVisible();
+  await expect(o.getByText("ipf-claims-review.pdf")).toBeVisible();
+  await o.goto("/reports/tasks");
+  const csv = o.waitForEvent("download");
+  await o.getByRole("link", { name: "Download CSV" }).click();
+  expect((await csv).suggestedFilename()).toMatch(/^ruleradar-task-status-.*\.csv$/);
 
   // The calendar and overview render for the officer.
   await o.goto("/calendar");

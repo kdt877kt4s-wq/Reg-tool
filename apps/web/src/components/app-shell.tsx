@@ -18,7 +18,7 @@ export function AppShell({
   unread: number | null;
 }) {
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[17rem_1fr]">
+    <div className="min-h-dvh md:grid md:grid-cols-[17rem_1fr] print:block">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:bg-paper focus:px-3 focus:py-2"
@@ -26,7 +26,7 @@ export function AppShell({
         Skip to content
       </a>
 
-      <aside className="flex flex-col bg-ink text-rail-text md:sticky md:top-0 md:h-dvh">
+      <aside className="flex flex-col bg-ink text-rail-text md:sticky md:top-0 md:h-dvh print:hidden">
         <div className="px-6 pb-5 pt-7">
           <Link href="/" className="text-lg font-semibold tracking-tight text-white">
             RuleRadar
@@ -63,7 +63,7 @@ export function AppShell({
         </div>
       </aside>
 
-      <main id="main" className="px-6 py-10 md:px-14 md:py-14">
+      <main id="main" className="px-6 py-10 md:px-14 md:py-14 print:p-0">
         {children}
       </main>
     </div>

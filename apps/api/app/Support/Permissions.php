@@ -23,6 +23,7 @@ final class Permissions
         'assessments.view' => [Role::OrgAdmin, Role::ComplianceOfficer, Role::DepartmentManager, Role::Employee, Role::Auditor],
         'assessments.edit' => [Role::OrgAdmin, Role::ComplianceOfficer],
         'assessments.approve' => [Role::ComplianceOfficer],
+        'reports.view' => [Role::OrgAdmin, Role::ComplianceOfficer, Role::Auditor],
     ];
 
     public static function allows(?Role $role, string $permission): bool

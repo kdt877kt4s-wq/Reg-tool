@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\OrganizationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\PublicInvitationController;
 use App\Http\Controllers\Api\V1\RegulatoryDocumentController;
+use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SourceController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\TaxonomyController;
@@ -109,6 +110,10 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::post('notifications/{notificationId}/read', [NotificationController::class, 'read'])->whereNumber('notificationId')->name('notifications.read');
         Route::get('notification-preferences', [NotificationController::class, 'preferences'])->name('notifications.preferences');
         Route::put('notification-preferences', [NotificationController::class, 'updatePreferences'])->name('notifications.preferences.update');
+
+        Route::get('reports/regulatory-activity', [ReportController::class, 'activity'])->name('reports.activity');
+        Route::get('reports/tasks', [ReportController::class, 'tasks'])->name('reports.tasks');
+        Route::get('reports/evidence-pack/{documentId}', [ReportController::class, 'evidencePack'])->whereNumber('documentId')->name('reports.evidence-pack');
 
         Route::get('audit-events', [AuditEventController::class, 'index'])->name('audit.index');
         Route::get('audit-events/verify', [AuditEventController::class, 'verify'])->name('audit.verify');

@@ -75,6 +75,11 @@ class Task extends Model
         return $this->belongsTo(Department::class);
     }
 
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
     public function document(): BelongsTo
     {
         return $this->belongsTo(RegulatoryDocument::class, 'document_id');

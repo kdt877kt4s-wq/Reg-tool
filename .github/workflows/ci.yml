@@ -233,7 +233,7 @@ jobs:
           cp .env.example .env && php artisan key:generate
           php artisan migrate --force --seed
           php artisan ruleradar:e2e-prepare
-          nohup php artisan serve --host=127.0.0.1 --port=8000 > ../../api-server.log 2>&1 &
+          nohup php artisan serve --host=127.0.0.1 --port=8000 --no-reload > ../../api-server.log 2>&1 &
       - name: Build and start the web app
         working-directory: apps/web
         run: |

@@ -282,7 +282,7 @@ class AssessmentController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function present(ImpactAssessment $a, RegulatoryDocument $document): array
+    public function present(ImpactAssessment $a, RegulatoryDocument $document): array
     {
         return [
             'id' => $a->id,

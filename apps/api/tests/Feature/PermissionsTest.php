@@ -60,5 +60,5 @@ it('returns the resolved permission list for the current role', function () {
 
     actingIn($auditor, $this->org)->getJson('/api/v1/organization')
         ->assertOk()
-        ->assertJsonPath('permissions', ['departments.view', 'profile.view', 'audit.view', 'regulations.view', 'assessments.view']);
+        ->assertJsonPath('permissions', ['departments.view', 'profile.view', 'audit.view', 'regulations.view', 'assessments.view', 'reports.view']);
 });
