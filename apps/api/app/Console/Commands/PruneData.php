@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\UserNotification;
+use App\Tenancy\TenantContext;
 use Illuminate\Console\Command;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -17,11 +18,12 @@ class PruneData extends Command
 
     protected $description = 'Delete old read notifications and expired sign-in tokens';
 
-    public function handle(): int
+    public function handle(TenantContext $context): int
     {
         $days = (int) config('ruleradar.notification_retention_days', 180);
-        $notifications = UserNotification::query()->withoutGlobalScopes()
-            ->whereNotNull('read_at')->where('created_at', '<', now()->subDays($days))->delete();
+        // System maintenance across organizations.
+        $notifications = $context->bypass(fn () => UserNotification::query()->withoutGlobalScopes()
+            ->whereNotNull('read_at')->where('created_at', '<', now()->subDays($days))->delete());
         $tokens = PersonalAccessToken::query()->where('expires_at', '<', now()->subDay())->delete();
 
         $this->line(json_encode(['notifications_deleted' => $notifications, 'tokens_deleted' => $tokens]));

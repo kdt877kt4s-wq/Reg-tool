@@ -107,6 +107,8 @@ test("compliance MVP: profile to cited analysis to approved, evidenced task", as
 
   // 5. ...opens a real Federal Register publication and runs the analysis.
   await o.goto("/regulations?q=Inpatient%20Psychiatric");
+  // On failure this prints what the list actually shows.
+  await expect(o.locator("main")).toContainText(DOC_TITLE);
   await o.getByRole("link", { name: DOC_TITLE }).first().click();
   await expect(o.getByRole("heading", { level: 1 })).toContainText("Inpatient Psychiatric");
   const documentId = /\/regulations\/(\d+)/.exec(o.url())![1];

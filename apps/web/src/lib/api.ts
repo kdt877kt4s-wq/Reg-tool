@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { toApiError, type ApiResult } from "./api-core";
+import { API_CONFIG_MESSAGES, resolveApiBase, toApiError, type ApiError, type ApiResult } from "./api-core";
 import { getOrgCookie, getSessionToken } from "./session";
 
 /**
@@ -19,9 +19,22 @@ type Options = {
   organizationId?: number | null;
 };
 
-function apiUrl(path: string): string {
-  const base = process.env.API_URL ?? "http://localhost:8000";
-  return `${base.replace(/\/$/, "")}/api/v1${path}`;
+const apiBase = resolveApiBase(process.env.API_URL, process.env.NODE_ENV === "production");
+if (!apiBase.ok) console.error(`[ruleradar] API_URL is ${apiBase.reason}: ${API_CONFIG_MESSAGES[apiBase.reason]}`);
+
+function apiUrl(path: string): string | null {
+  return apiBase.ok ? `${apiBase.base}/api/v1${path}` : null;
+}
+
+function configError(): ApiError {
+  const reason = apiBase.ok ? "missing" : apiBase.reason;
+  return { status: 0, code: "api_not_configured", message: API_CONFIG_MESSAGES[reason], fieldErrors: {} };
+}
+
+/** Log why the API could not be reached (host only, never tokens or bodies). */
+function logUnreachable(url: string, error: unknown): void {
+  const cause = error instanceof Error ? ((error.cause as { code?: string } | undefined)?.code ?? error.name) : "unknown";
+  console.error(`[ruleradar] API unreachable at ${new URL(url).origin}: ${cause}`);
 }
 
 export async function apiRequest<T>(path: string, options: Options = {}): Promise<ApiResult<T>> {
@@ -38,16 +51,20 @@ export async function apiRequest<T>(path: string, options: Options = {}): Promis
   }
   if (body !== undefined) headers["Content-Type"] = "application/json";
 
+  const url = apiUrl(path);
+  if (!url) return { ok: false, error: configError() };
+
   let res: Response;
   try {
-    res = await fetch(apiUrl(path), {
+    res = await fetch(url, {
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     });
-  } catch {
+  } catch (error) {
+    logUnreachable(url, error);
     return { ok: false, error: toApiError(0, null) };
   }
 
@@ -63,16 +80,18 @@ export async function apiRequest<T>(path: string, options: Options = {}): Promis
 export async function apiFetch(path: string, init: { method?: string; body?: BodyInit; timeoutMs?: number } = {}): Promise<Response | null> {
   const token = await getSessionToken();
   const organizationId = await getActiveOrganizationId();
-  if (!token || organizationId === null) return null;
+  const url = apiUrl(path);
+  if (!token || organizationId === null || !url) return null;
   try {
-    return await fetch(apiUrl(path), {
+    return await fetch(url, {
       method: init.method ?? "GET",
       headers: { Accept: "application/json", Authorization: `Bearer ${token}`, "X-Organization-Id": String(organizationId) },
       body: init.body,
       cache: "no-store",
       signal: AbortSignal.timeout(init.timeoutMs ?? 60_000),
     });
-  } catch {
+  } catch (error) {
+    logUnreachable(url, error);
     return null;
   }
 }

@@ -18,7 +18,7 @@ it('verifies every organization\'s audit chain', function () {
     $admin = addMember($org, Role::OrgAdmin);
     actingIn($admin, $org)->postJson('/api/v1/departments', ['name' => 'Claims'])->assertCreated();
 
-    $this->artisan('ruleradar:audit-verify')->assertSuccessful()->expectsOutputToContain('"broken":0');
+    $this->artisan('ruleradar:audit-verify')->assertSuccessful()->expectsOutputToContain('"organizations_checked":1,"broken":0');
 });
 
 it('prunes old read notifications and keeps unread and recent ones', function () {

@@ -1,0 +1,162 @@
+name: Deploy API to Azure
+
+# Started by hand. Deploys the API (and, if asked, the web app) to Azure
+# Container Apps. Setup, one time: docs/deploy.md.
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment
+        type: choice
+        options: [dev, staging, prod]
+        default: dev
+      frontend_url:
+        description: Public URL of the web app (e.g. https://ruleradar.vercel.app)
+        required: true
+      deploy_web:
+        description: Also host the web app on Azure (leave off when it is on Vercel)
+        type: boolean
+        default: false
+      enable_scan_webhook:
+        description: Connect Defender malware scan results to the API (after the API is up)
+        type: boolean
+        default: true
+
+permissions:
+  id-token: write   # OpenID Connect sign-in to Azure; no stored Azure password
+  contents: read
+
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check required settings
+        env:
+          HAS_CLIENT: ${{ secrets.AZURE_CLIENT_ID != '' }}
+          HAS_PG_ADMIN: ${{ secrets.POSTGRES_ADMIN_PASSWORD != '' }}
+          HAS_PG_APP: ${{ secrets.POSTGRES_APP_PASSWORD != '' }}
+          HAS_APP_KEY: ${{ secrets.APP_KEY != '' }}
+          HAS_WEBHOOK: ${{ secrets.MALWARE_WEBHOOK_SECRET != '' }}
+        run: |
+          missing=""
+          [ -n "$RG" ] || missing="$missing AZURE_RESOURCE_GROUP(variable)"
+          [ "$HAS_CLIENT" = true ] || missing="$missing AZURE_CLIENT_ID"
+          [ "$HAS_PG_ADMIN" = true ] || missing="$missing POSTGRES_ADMIN_PASSWORD"
+          [ "$HAS_PG_APP" = true ] || missing="$missing POSTGRES_APP_PASSWORD"
+          [ "$HAS_APP_KEY" = true ] || missing="$missing APP_KEY"
+          [ "$HAS_WEBHOOK" = true ] || missing="$missing MALWARE_WEBHOOK_SECRET"
+          if [ -n "$missing" ]; then
+            echo "::error title=Missing deployment settings::Add these in GitHub (Settings > Environments > ${{ inputs.environment }}):$missing. See docs/deploy.md."
+            exit 1
+          fi
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: "Infrastructure, pass 1 (data and platform)"
+        id: infra
+        env:
+          PG_ADMIN: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+          PG_APP: ${{ secrets.POSTGRES_APP_PASSWORD }}
+          APP_KEY: ${{ secrets.APP_KEY }}
+          WEBHOOK: ${{ secrets.MALWARE_WEBHOOK_SECRET }}
+          ANTHROPIC: ${{ secrets.ANTHROPIC_API_KEY }}
+          VOYAGE: ${{ secrets.VOYAGE_API_KEY }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          deploy() {
+            az deployment group create -g "$RG" -n "ruleradar-$1-${{ github.run_id }}" -f infra/main.bicep \
+              --parameters environmentName=${{ inputs.environment }} frontendUrl="${{ inputs.frontend_url }}" \
+                postgresAdminPassword="$PG_ADMIN" postgresAppPassword="$PG_APP" appKey="$APP_KEY" \
+                malwareWebhookSecret="$WEBHOOK" anthropicApiKey="$ANTHROPIC" voyageApiKey="$VOYAGE" \
+                smtpHost="${{ vars.SMTP_HOST }}" smtpPort="${{ vars.SMTP_PORT || 587 }}" smtpUsername="${{ vars.SMTP_USERNAME }}" \
+                smtpPassword="$SMTP_PASSWORD" mailFromAddress="${{ vars.MAIL_FROM_ADDRESS || 'no-reply@example.com' }}" \
+                imageTag="$TAG" deployWeb=${{ inputs.deploy_web }} "${@:2}" \
+              --query properties.outputs -o json
+          }
+          declare -f deploy > deploy.sh
+          deploy infra deployApps=false > outputs.json
+          echo "registry=$(jq -r .registryLoginServer.value outputs.json | cut -d. -f1)" >> "$GITHUB_OUTPUT"
+          echo "pg_host=$(jq -r .postgresHost.value outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "pg_name=$(jq -r .postgresServerName.value outputs.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Build images in Azure Container Registry
+        run: |
+          az acr build -r "${{ steps.infra.outputs.registry }}" -t "ruleradar-api:$TAG" apps/api
+          if [ "${{ inputs.deploy_web }}" = true ]; then
+            az acr build -r "${{ steps.infra.outputs.registry }}" -t "ruleradar-web:$TAG" apps/web
+          fi
+
+      - name: Database role and extensions (idempotent)
+        env:
+          PGPASSWORD: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+          APP_PASSWORD: ${{ secrets.POSTGRES_APP_PASSWORD }}
+        run: |
+          ip=$(curl -s https://api.ipify.org)
+          az postgres flexible-server firewall-rule create -g "$RG" -n "${{ steps.infra.outputs.pg_name }}" \
+            --rule-name deploy-runner --start-ip-address "$ip" --end-ip-address "$ip" -o none
+          trap 'az postgres flexible-server firewall-rule delete -g "$RG" -n "${{ steps.infra.outputs.pg_name }}" --rule-name deploy-runner --yes -o none' EXIT
+          sudo apt-get install -y -qq postgresql-client > /dev/null
+          psql "host=${{ steps.infra.outputs.pg_host }} dbname=ruleradar user=ruleradaradmin sslmode=require" \
+            -v app_password="$APP_PASSWORD" -f infra/postgres-bootstrap.sql
+
+      - name: Apps (pass 2)
+        id: apps
+        env:
+          PG_ADMIN: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+          PG_APP: ${{ secrets.POSTGRES_APP_PASSWORD }}
+          APP_KEY: ${{ secrets.APP_KEY }}
+          WEBHOOK: ${{ secrets.MALWARE_WEBHOOK_SECRET }}
+          ANTHROPIC: ${{ secrets.ANTHROPIC_API_KEY }}
+          VOYAGE: ${{ secrets.VOYAGE_API_KEY }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          source deploy.sh
+          deploy apps deployApps=true > outputs.json
+          echo "api_url=$(jq -r .apiUrl.value outputs.json)" >> "$GITHUB_OUTPUT"
+          echo "job=$(jq -r .migrateJobName.value outputs.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Migrate the database
+        run: |
+          exec_name=$(az containerapp job start -g "$RG" -n "${{ steps.apps.outputs.job }}" --query name -o tsv)
+          for i in $(seq 1 60); do
+            status=$(az containerapp job execution show -g "$RG" -n "${{ steps.apps.outputs.job }}" --job-execution-name "$exec_name" --query properties.status -o tsv)
+            [ "$status" = Succeeded ] && break
+            [ "$status" = Failed ] && { echo "::error title=Migration failed::See the job's logs in the Azure portal (Container Apps job ${{ steps.apps.outputs.job }})."; exit 1; }
+            sleep 10
+          done
+          [ "$status" = Succeeded ] || { echo "::error title=Migration timed out::status $status"; exit 1; }
+
+      - name: Connect malware scan results (pass 3)
+        if: inputs.enable_scan_webhook
+        env:
+          PG_ADMIN: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+          PG_APP: ${{ secrets.POSTGRES_APP_PASSWORD }}
+          APP_KEY: ${{ secrets.APP_KEY }}
+          WEBHOOK: ${{ secrets.MALWARE_WEBHOOK_SECRET }}
+          ANTHROPIC: ${{ secrets.ANTHROPIC_API_KEY }}
+          VOYAGE: ${{ secrets.VOYAGE_API_KEY }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          source deploy.sh
+          deploy scan deployApps=true enableScanResultsWebhook=true > /dev/null
+
+      - name: Check the API
+        run: |
+          url="${{ steps.apps.outputs.api_url }}"
+          for i in $(seq 1 30); do curl -sf "$url/api/v1/health" && break; sleep 10; done
+          curl -sf "$url/api/v1/health" > /dev/null || { echo "::error title=API not healthy::$url/api/v1/health"; exit 1; }
+          echo "::notice title=API deployed::$url  (set API_URL to this in Vercel)"

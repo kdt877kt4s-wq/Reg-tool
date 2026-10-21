@@ -80,3 +80,32 @@ export function lines(value: FormDataEntryValue | null): string[] {
     .map((l) => l.trim())
     .filter(Boolean);
 }
+
+/**
+ * Where the API lives, from API_URL. Outside development it must be set,
+ * and must use HTTPS unless it points at this machine (CI, local runs).
+ */
+export function resolveApiBase(
+  value: string | undefined,
+  production: boolean,
+): { ok: true; base: string } | { ok: false; reason: "missing" | "insecure" | "invalid" } {
+  const raw = value?.trim();
+  if (!raw) return production ? { ok: false, reason: "missing" } : { ok: true, base: "http://localhost:8000" };
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return { ok: false, reason: "invalid" };
+  }
+  const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  if (url.protocol !== "https:" && !(url.protocol === "http:" && (local || !production))) {
+    return { ok: false, reason: "insecure" };
+  }
+  return { ok: true, base: raw.replace(/\/+$/, "").replace(/\/api\/v1$/, "") };
+}
+
+export const API_CONFIG_MESSAGES = {
+  missing: "RuleRadar's web app is not connected to its API: the API_URL setting is missing. An administrator needs to set it in the hosting settings.",
+  insecure: "RuleRadar's API address (API_URL) must use https://. An administrator needs to correct it in the hosting settings.",
+  invalid: "RuleRadar's API address (API_URL) is not a valid URL. An administrator needs to correct it in the hosting settings.",
+} as const;

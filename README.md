@@ -100,6 +100,26 @@ Notifications appear in the app and, unless a person turns a kind off, by email.
 overdue reminders, a digest of new publications that match the profile, and alerts when a
 document changes after its assessment was approved. Each is sent once.
 
+## Deployment
+
+RuleRadar has two deployable parts: the web app (`apps/web`, can run on Vercel) and the API
+(`apps/api`, a container with PostgreSQL, Redis, a worker and a scheduler). The web app needs
+the API: set `API_URL` in the web app's hosting to the API's HTTPS address.
+**[docs/deploy.md](docs/deploy.md)** walks through deploying the API to Azure with the
+"Deploy API to Azure" workflow and connecting Vercel to it.
+
+## Reports and security operations
+
+- Reports (administrators, compliance officers, auditors): regulatory activity, task status
+  and a per-assessment evidence pack with an audit-chain check. Print or save as PDF; CSV
+  for the first two. Every report generated is audit-logged.
+- `ruleradar:audit-verify` (daily 03:30 Central) re-checks every organization's audit hash
+  chain; `ruleradar:prune` (03:45) removes read notifications older than
+  `NOTIFICATION_RETENTION_DAYS` (180) and expired sign-in tokens.
+- Evidence scanning: Defender for Storage results arrive at
+  `POST /api/v1/webhooks/malware-scan?key=...` (Event Grid). Infected files are blocked.
+- Web pages send a nonce-based Content Security Policy; the API sends restrictive headers.
+
 ## Tests
 
 ```bash
@@ -107,7 +127,10 @@ cd apps/api && vendor/bin/pest      # needs the docker Postgres (database rulera
 cd apps/web && npm test && npm run typecheck && npm run lint
 ```
 
-CI runs both suites, a Bicep compile and dependency audits on every push and pull request.
+CI runs both suites, a browser test of the whole MVP path (Playwright, `apps/web/e2e`) against
+the real API and database, image builds, a Bicep compile and dependency audits on every push.
+The browser test uses recorded Federal Register responses and an `e2e`-only scripted model,
+labelled as test output, instead of Claude.
 
 ## Implementation stages
 
@@ -118,7 +141,7 @@ CI runs both suites, a Bicep compile and dependency audits on every push and pul
 | 2 | Federal Register ingestion and Regulatory Intelligence | Done |
 | 3 | AI analysis with citations, review and approval | Done |
 | 4 | Tasks, evidence, calendar, notifications, dashboard | Done |
-| 5 | Reports, hardening, Azure deploy, pilot | Planned |
+| 5 | Reports, hardening, Azure deploy, end-to-end tests | Done (pilot deployment pending) |
 
 ## Security model in brief
 

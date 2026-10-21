@@ -275,3 +275,18 @@ jobs:
           name: playwright-traces
           path: apps/web/test-results
           retention-days: 7
+
+  images:
+    name: Container images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build the API image
+        run: docker build -t ruleradar-api:ci apps/api
+      - name: Smoke-test the API image
+        run: |
+          docker run --rm ruleradar-api:ci php artisan --version
+          docker run --rm ruleradar-api:ci php -m | grep -qi pdo_pgsql
+          docker run --rm ruleradar-api:ci frankenphp version
+      - name: Build the web image
+        run: docker build -t ruleradar-web:ci apps/web

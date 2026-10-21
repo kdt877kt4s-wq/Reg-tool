@@ -5,6 +5,7 @@
     "license": "proprietary",
     "require": {
         "php": "^8.3",
+        "azure-oss/storage-blob-laravel": "^2.2",
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.2|^5.0"
     },

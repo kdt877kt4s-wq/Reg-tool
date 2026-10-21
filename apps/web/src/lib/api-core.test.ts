@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formError, lines, listField, toApiError } from "./api-core";
+import { formError, lines, listField, resolveApiBase, toApiError } from "./api-core";
 
 describe("toApiError", () => {
   it("keeps the first message per field from a Laravel validation error", () => {
@@ -49,5 +49,24 @@ describe("form helpers", () => {
   it("splits a textarea into lines", () => {
     expect(lines("HMO D-SNP\r\n\n  PPO  \n")).toEqual(["HMO D-SNP", "PPO"]);
     expect(lines(null)).toEqual([]);
+  });
+});
+
+describe("resolveApiBase", () => {
+  it("defaults to the local API only in development", () => {
+    expect(resolveApiBase(undefined, false)).toEqual({ ok: true, base: "http://localhost:8000" });
+    expect(resolveApiBase(undefined, true)).toEqual({ ok: false, reason: "missing" });
+    expect(resolveApiBase("  ", true)).toEqual({ ok: false, reason: "missing" });
+  });
+
+  it("requires HTTPS in production except on this machine", () => {
+    expect(resolveApiBase("http://api.example.com", true)).toEqual({ ok: false, reason: "insecure" });
+    expect(resolveApiBase("http://127.0.0.1:8000", true)).toEqual({ ok: true, base: "http://127.0.0.1:8000" });
+    expect(resolveApiBase("not a url", true)).toEqual({ ok: false, reason: "invalid" });
+  });
+
+  it("accepts the address with or without a trailing /api/v1", () => {
+    expect(resolveApiBase("https://api.example.com/", true)).toEqual({ ok: true, base: "https://api.example.com" });
+    expect(resolveApiBase("https://api.example.com/api/v1", true)).toEqual({ ok: true, base: "https://api.example.com" });
   });
 });
