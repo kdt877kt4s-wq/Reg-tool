@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Ai\Embedder;
 use App\Ingestion\DocumentStore;
 use App\Ingestion\SourceRegistry;
 use App\Ingestion\SourceUnavailable;
@@ -49,6 +50,15 @@ class FetchDocumentText implements ShouldQueue
         }
 
         $store->storeText($document, $text);
+
+        // Semantic retrieval, when an embedding key is configured.
+        $document->refresh();
+        if ($document->text_status === 'available') {
+            $versionId = $document->versions()->where('version_no', $document->current_version)->value('id');
+            if ($versionId !== null && app(Embedder::class)->enabled()) {
+                EmbedDocumentPassages::dispatch((int) $versionId);
+            }
+        }
     }
 
     public function failed(): void

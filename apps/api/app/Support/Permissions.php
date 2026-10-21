@@ -19,6 +19,10 @@ final class Permissions
         'profile.edit' => [Role::OrgAdmin, Role::ComplianceOfficer],
         'audit.view' => [Role::OrgAdmin, Role::ComplianceOfficer, Role::Auditor],
         'regulations.view' => [Role::OrgAdmin, Role::ComplianceOfficer, Role::DepartmentManager, Role::Employee, Role::Auditor],
+        'analysis.run' => [Role::OrgAdmin, Role::ComplianceOfficer],
+        'assessments.view' => [Role::OrgAdmin, Role::ComplianceOfficer, Role::DepartmentManager, Role::Employee, Role::Auditor],
+        'assessments.edit' => [Role::OrgAdmin, Role::ComplianceOfficer],
+        'assessments.approve' => [Role::ComplianceOfficer],
     ];
 
     public static function allows(?Role $role, string $permission): bool

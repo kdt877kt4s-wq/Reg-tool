@@ -104,6 +104,19 @@ final class TenantContext
         }
     }
 
+    /** @return array{0: ?int, 1: ?Organization, 2: ?Membership, 3: bool} */
+    public function snapshot(): array
+    {
+        return [$this->userId, $this->organization, $this->membership, $this->bypass];
+    }
+
+    /** @param array{0: ?int, 1: ?Organization, 2: ?Membership, 3: bool} $state */
+    public function restore(array $state): void
+    {
+        [$this->userId, $this->organization, $this->membership, $this->bypass] = $state;
+        $this->sync();
+    }
+
     private function sync(): void
     {
         if (DB::getDriverName() !== 'pgsql') {

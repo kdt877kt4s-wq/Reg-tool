@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Ai\AnthropicModel;
+use App\Ai\Embedder;
+use App\Ai\LanguageModel;
 use App\Tenancy\TenantContext;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -22,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(TenantContext::class);
+
+        // AI: server-side only. Keys come from configuration, never the web app.
+        $this->app->bind(LanguageModel::class, fn () => new AnthropicModel(config('ai.anthropic')));
+        $this->app->bind(Embedder::class, fn () => new Embedder(config('ai.voyage')));
     }
 
     public function boot(): void
@@ -68,6 +75,8 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->id ?: $request->ip()));
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(strtolower((string) $request->input('email')).'|'.$request->ip()));
         RateLimiter::for('mfa', fn (Request $request) => Limit::perMinute(5)->by((string) ($request->input('challenge') ?: $request->user()?->id).'|'.$request->ip()));
+        // AI analyses cost money: a per-organization ceiling.
+        RateLimiter::for('ai', fn (Request $request) => Limit::perHour(60)->by('org:'.$request->header('X-Organization-Id', (string) $request->user()?->id)));
         // Outbound: fetching publication text from government sources.
         RateLimiter::for('source-text', fn () => Limit::perMinute(60));
         RateLimiter::for('public-forms', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AnalysisController;
+use App\Http\Controllers\Api\V1\AssessmentController;
 use App\Http\Controllers\Api\V1\AuditEventController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\MfaController;
@@ -74,6 +76,16 @@ Route::prefix('v1')->name('v1.')->group(function () {
         Route::get('regulatory-documents/facets', [RegulatoryDocumentController::class, 'facets'])->name('documents.facets');
         Route::get('regulatory-documents/{documentId}', [RegulatoryDocumentController::class, 'show'])->whereNumber('documentId')->name('documents.show');
         Route::get('regulatory-documents/{documentId}/passages', [RegulatoryDocumentController::class, 'passages'])->whereNumber('documentId')->name('documents.passages');
+
+        Route::middleware('throttle:ai')->post('regulatory-documents/{documentId}/analysis', [AnalysisController::class, 'store'])->whereNumber('documentId')->name('analysis.store');
+        Route::get('regulatory-documents/{documentId}/analysis', [AnalysisController::class, 'show'])->whereNumber('documentId')->name('analysis.show');
+
+        Route::get('assessments', [AssessmentController::class, 'index'])->name('assessments.index');
+        Route::get('regulatory-documents/{documentId}/assessment', [AssessmentController::class, 'show'])->whereNumber('documentId')->name('assessments.show');
+        Route::post('regulatory-documents/{documentId}/assessment', [AssessmentController::class, 'start'])->whereNumber('documentId')->name('assessments.start');
+        Route::put('regulatory-documents/{documentId}/assessment', [AssessmentController::class, 'update'])->whereNumber('documentId')->name('assessments.update');
+        Route::post('regulatory-documents/{documentId}/assessment/approve', [AssessmentController::class, 'approve'])->whereNumber('documentId')->name('assessments.approve');
+        Route::post('regulatory-documents/{documentId}/assessment/reopen', [AssessmentController::class, 'reopen'])->whereNumber('documentId')->name('assessments.reopen');
 
         Route::get('audit-events', [AuditEventController::class, 'index'])->name('audit.index');
         Route::get('audit-events/verify', [AuditEventController::class, 'verify'])->name('audit.verify');

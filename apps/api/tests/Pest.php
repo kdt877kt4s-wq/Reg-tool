@@ -1,5 +1,6 @@
 <?php
 
+use App\Ai\LanguageModel;
 use App\Ingestion\IngestSource;
 use App\Ingestion\SourceRegistry;
 use App\Models\Membership;
@@ -13,6 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
+use Tests\Support\FakeLanguageModel;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -152,4 +154,49 @@ function fakeFederalRegister(array $documents, int $searchStatus = 200): void
 function pollFederalRegister(): SourceRun
 {
     return app(IngestSource::class)->run(app(SourceRegistry::class)->adapter('federal_register'), 400);
+}
+
+/** A well-formed, fully supported analysis of 2026-20134. */
+function goodAnalysis(string $user): array
+{
+    $factor = FakeLanguageModel::refFor($user, 'budget neutrality factor changed from 0.9989 to 0.9986');
+    $dates = FakeLanguageModel::refFor($user, 'This correction is effective October 1, 2026');
+
+    return [
+        'what_changed' => [[
+            'text' => 'Corrects the FY 2027 IPF PPS wage index budget neutrality factor.',
+            'basis' => 'regulatory_text',
+            'citations' => [$factor],
+            'quote' => 'the wage index budget neutrality factor changed from 0.9989 to 0.9986',
+        ]],
+        'why_it_matters' => [[
+            'text' => 'Inpatient psychiatric facility payment rates change slightly.',
+            'basis' => 'ai_interpretation',
+            'citations' => [$factor],
+        ]],
+        'applicability' => [
+            'level' => 'possible',
+            'reasons' => [['text' => 'It corrects fee-for-service IPF rates; Medicare Advantage plans may price IPF claims from them.', 'basis' => 'ai_interpretation', 'citations' => [$factor]]],
+            'missing_facts' => ['Whether provider contracts pay inpatient psychiatric facilities at Medicare rates'],
+        ],
+        'affected_functions' => ['claims', 'not_a_real_function'],
+        'operational_impacts' => [],
+        'policies_to_review' => [],
+        'deadlines' => [['date' => '2026-10-01', 'label' => 'Correction effective', 'citations' => [$dates]]],
+        'suggested_actions' => [[
+            'title' => 'Check IPF claims priced on the corrected rates',
+            'description' => 'Confirm whether contracts reference Medicare IPF PPS rates.',
+            'priority' => 'medium',
+            'citations' => [$factor],
+        ]],
+        'confidence' => 'high',
+        'confidence_reason' => 'The correction text is short and fully provided.',
+    ];
+}
+
+function useModel(FakeLanguageModel $model): FakeLanguageModel
+{
+    app()->instance(LanguageModel::class, $model);
+
+    return $model;
 }
