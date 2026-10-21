@@ -4,7 +4,10 @@
 FROM composer:2 AS vendor
 WORKDIR /app
 COPY composer.json composer.lock* ./
-RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction --no-progress --ignore-platform-reqs
+# Resolve for the PHP version the runtime image has (8.3), not the
+# composer image's own; PHP extensions are installed in the runtime stage.
+RUN composer config platform.php 8.3.30 \
+    && composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction --no-progress --ignore-platform-req='ext-*'
 COPY . .
 RUN composer dump-autoload --optimize --no-dev --no-scripts
 

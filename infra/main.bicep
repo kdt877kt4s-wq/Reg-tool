@@ -242,19 +242,54 @@ resource defenderForStorage 'Microsoft.Security/defenderForStorageSettings@2022-
 
 // ---------- Secrets (Key Vault) ----------
 
-var kvSecrets = union({
-  'app-key': appKey
-  'postgres-app-password': postgresAppPassword
-  'redis-password': redis.listKeys().primaryKey
-  'storage-connection-string': 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
-  'malware-webhook-secret': malwareWebhookSecret
-}, empty(anthropicApiKey) ? {} : { 'anthropic-api-key': anthropicApiKey }, empty(voyageApiKey) ? {} : { 'voyage-api-key': voyageApiKey }, empty(smtpPassword) ? {} : { 'smtp-password': smtpPassword })
-
-resource secrets 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = [for item in items(kvSecrets): {
+// One resource per secret: values from list*() cannot drive a loop.
+resource secretAppKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: vault
-  name: item.key
-  properties: { value: item.value }
-}]
+  name: 'app-key'
+  properties: { value: appKey }
+}
+
+resource secretPostgresApp 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: vault
+  name: 'postgres-app-password'
+  properties: { value: postgresAppPassword }
+}
+
+resource secretRedis 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: vault
+  name: 'redis-password'
+  properties: { value: redis.listKeys().primaryKey }
+}
+
+resource secretStorage 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: vault
+  name: 'storage-connection-string'
+  properties: { value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
+}
+
+resource secretWebhook 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: vault
+  name: 'malware-webhook-secret'
+  properties: { value: malwareWebhookSecret }
+}
+
+resource secretAnthropic 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(anthropicApiKey)) {
+  parent: vault
+  name: 'anthropic-api-key'
+  properties: { value: anthropicApiKey }
+}
+
+resource secretVoyage 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(voyageApiKey)) {
+  parent: vault
+  name: 'voyage-api-key'
+  properties: { value: voyageApiKey }
+}
+
+resource secretSmtp 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(smtpPassword)) {
+  parent: vault
+  name: 'smtp-password'
+  properties: { value: smtpPassword }
+}
 
 // ---------- Identity for the apps: pull images, read secrets ----------
 
@@ -347,7 +382,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
   location: location
   tags: tags
   identity: identity
-  dependsOn: [acrPull, kvSecretsUser, secrets]
+  dependsOn: [acrPull, kvSecretsUser, secretAppKey, secretPostgresApp, secretRedis, secretStorage, secretWebhook, secretAnthropic, secretVoyage, secretSmtp]
   properties: {
     managedEnvironmentId: containerEnv.id
     configuration: {
@@ -377,7 +412,7 @@ resource worker 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
   location: location
   tags: tags
   identity: identity
-  dependsOn: [acrPull, kvSecretsUser, secrets]
+  dependsOn: [acrPull, kvSecretsUser, secretAppKey, secretPostgresApp, secretRedis, secretStorage, secretWebhook, secretAnthropic, secretVoyage, secretSmtp]
   properties: {
     managedEnvironmentId: containerEnv.id
     configuration: { registries: registries, secrets: secretRefs }
@@ -393,7 +428,7 @@ resource scheduler 'Microsoft.App/containerApps@2024-03-01' = if (deployApps) {
   location: location
   tags: tags
   identity: identity
-  dependsOn: [acrPull, kvSecretsUser, secrets]
+  dependsOn: [acrPull, kvSecretsUser, secretAppKey, secretPostgresApp, secretRedis, secretStorage, secretWebhook, secretAnthropic, secretVoyage, secretSmtp]
   properties: {
     managedEnvironmentId: containerEnv.id
     configuration: { registries: registries, secrets: secretRefs }
@@ -410,7 +445,7 @@ resource migrateJob 'Microsoft.App/jobs@2024-03-01' = if (deployApps) {
   location: location
   tags: tags
   identity: identity
-  dependsOn: [acrPull, kvSecretsUser, secrets]
+  dependsOn: [acrPull, kvSecretsUser, secretAppKey, secretPostgresApp, secretRedis, secretStorage, secretWebhook, secretAnthropic, secretVoyage, secretSmtp]
   properties: {
     environmentId: containerEnv.id
     configuration: {

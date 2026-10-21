@@ -18,7 +18,8 @@ export function TaskControls({ taskId, allowed, hasEvidence }: { taskId: number;
 
   const simple = (["start", "submit", "accept"] as const).filter((a) => allowed.includes(a));
   const withReason = (["return", "cancel"] as const).filter((a) => allowed.includes(a));
-  if (simple.length === 0 && withReason.length === 0) return null;
+  // Keep the confirmation visible after the last available action is used.
+  if (simple.length === 0 && withReason.length === 0) return <FormMessage state={state} />;
 
   return (
     <div className="space-y-3">
