@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { SubmitButton, buttonClass } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { Field, FormMessage, inputClass } from "@/components/ui/field";
 import type { TaskAction } from "@/lib/api";
 import type { FormState } from "@/lib/api-core";

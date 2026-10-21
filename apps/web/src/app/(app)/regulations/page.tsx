@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SourceStatusLine } from "@/components/source-status";
 import { inputClass } from "@/components/ui/field";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { apiRequest, type DocumentList, type Facets, type SourceStatus } from "@/lib/api";
 import { DocumentRow } from "./document-row";
 

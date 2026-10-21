@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { apiRequest, type TaskSummary } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { TaskRow } from "./task-row";

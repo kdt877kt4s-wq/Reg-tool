@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { inputClass } from "@/components/ui/field";
 import { apiRequest, type QueueRow } from "@/lib/api";
 import { can, requireOrganization } from "@/lib/auth";

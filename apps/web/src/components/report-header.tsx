@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PrintButton } from "@/components/print-button";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import type { ReportMeta } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
 

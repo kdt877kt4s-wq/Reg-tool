@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { inputClass } from "@/components/ui/field";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { apiRequest, getTaxonomy, type AnalysisResponse, type Assessment, type PassageList, type RegulatoryDocumentDetail } from "@/lib/api";
 import { can, requireOrganization } from "@/lib/auth";
 import { AnalysisPanel } from "./analysis-panel";

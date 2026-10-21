@@ -1,6 +1,6 @@
 import Link from "next/link";
 import AuthLayout from "@/app/(auth)/layout";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { requireAccount } from "@/lib/auth";
 import { TwoFactorSetup } from "./setup";
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { inputClass } from "@/components/ui/field";
 import { apiRequest, type Assignees, type TaskDetail } from "@/lib/api";
 import { dueNote, formatDate, formatDateTime } from "@/lib/format";

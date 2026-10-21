@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { FormMessage, inputClass } from "@/components/ui/field";
 import type { Assessment, CitationInfo, TaxonomyTerm } from "@/lib/api";
 import type { FormState } from "@/lib/api-core";

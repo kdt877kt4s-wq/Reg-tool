@@ -177,7 +177,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Compile Bicep
-        run: az bicep install && az bicep build --file infra/main.bicep --stdout > /dev/null
+        run: |
+          az bicep install
+          if ! az bicep build --file infra/main.bicep --stdout > /dev/null 2> bicep.log; then
+            echo "::error title=Bicep::$(grep -E 'Error|error' bicep.log | head -20 | sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g')"
+            exit 1
+          fi
+          grep -E 'Warning' bicep.log | head -20 | while read -r line; do echo "::warning title=Bicep::$line"; done || true
 
   e2e:
     name: End-to-end (Playwright)
@@ -282,11 +288,21 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Build the API image
-        run: docker build -t ruleradar-api:ci apps/api
+        run: |
+          set -o pipefail
+          docker build --progress=plain -t ruleradar-api:ci apps/api 2>&1 | tee api-image.log
       - name: Smoke-test the API image
         run: |
           docker run --rm ruleradar-api:ci php artisan --version
           docker run --rm ruleradar-api:ci php -m | grep -qi pdo_pgsql
           docker run --rm ruleradar-api:ci frankenphp version
       - name: Build the web image
-        run: docker build -t ruleradar-web:ci apps/web
+        run: |
+          set -o pipefail
+          docker build --progress=plain -t ruleradar-web:ci apps/web 2>&1 | tee web-image.log
+      - name: Report image failures
+        if: failure()
+        run: |
+          for f in api-image.log web-image.log; do
+            [ -f "$f" ] && echo "::error title=$f::$(tail -c 3000 "$f" | sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g')" || true
+          done

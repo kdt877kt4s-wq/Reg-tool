@@ -1,6 +1,6 @@
 import AuthLayout from "@/app/(auth)/layout";
 import { logoutAction } from "@/app/(auth)/actions";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { requireAccount } from "@/lib/auth";
 
 export const metadata = { title: "No organization" };

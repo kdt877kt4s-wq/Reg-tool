@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { SourceStatusLine } from "@/components/source-status";
 import { WeeklyChart } from "@/components/weekly-chart";
 import { api, apiRequest, type DashboardSummary, type DocumentList, type Health, type Profile, type QueueRow, type SourceStatus } from "@/lib/api";

@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useFormAction } from "@/lib/use-form-action";
-import { SubmitButton, buttonClass } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-styles";
 import { Field, FormMessage, inputClass } from "@/components/ui/field";
 import { twoFactorAction, type SetupState } from "./actions";
 
